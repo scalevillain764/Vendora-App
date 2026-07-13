@@ -1,7 +1,8 @@
 ﻿using _error_types;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace _result
 {
-    public class Result <T> where T: class
+    public class Result<T> where T : class
     {
         public bool IsSuccess { get; set; }
         public T? data { get; set; }
@@ -15,6 +16,6 @@ namespace _result
             ErrorType = errorType;
         }
         public static Result<T> Success(T data) => new Result<T>(true, data, null, null);
-        public static Result<T> Error(string message, ErrorType type) => new Result<T> (false, null, message, type);
+        public static Result<T> Error(string message, ErrorType type) => new Result<T>(false, null, message, type);
     }
 }
