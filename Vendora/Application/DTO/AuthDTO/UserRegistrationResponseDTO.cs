@@ -2,7 +2,7 @@
 {
     public class UserRegistationResponseDTO
     {
-        public string UserId { get; set; }
+        public Ulid UserId { get; set; }
         public string Login { get; set; }
     }
 }

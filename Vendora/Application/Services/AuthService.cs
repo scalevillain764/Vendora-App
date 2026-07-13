@@ -10,17 +10,20 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using _appDbContext;
+using Microsoft.EntityFrameworkCore;
 namespace _authService
 {
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly
-        public AuthService(IConfiguration configuration, IHttpContextAccessor accessor)
+        private readonly AppDbContext _context;
+        public AuthService(IConfiguration configuration, IHttpContextAccessor accessor, AppDbContext context)
         {
             _configuration = configuration;
             _httpContextAccessor = accessor;
+            _context = context;
         }
 
         private string AppendCookiesAndGetAccessToken(User user)
@@ -86,7 +89,24 @@ namespace _authService
 
             string existingRefreshTokenHash = BCrypt.Net.BCrypt.HashPassword(existingRefreshToken);
 
-            var user = await
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x => BCrypt.Net.BCrypt.Verify(existingRefreshTokenHash, x.RefreshTokenHash));
+
+            if (user == null)
+                return Result<UserLogInResponseDTO>.Error("Пользователь не найден", ErrorType.Unauthorized);
+
+            if (user.RefreshTokenExpiresAt != null)
+            {
+                if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
+                    return Result<UserLogInResponseDTO>.Error("Сессия истекла", ErrorType.Unauthorized);
+            }
+            else
+                return Result<UserLogInResponseDTO>.Error("Ошибка сессии", ErrorType.Unauthorized);
+
+            string AccessToken = AppendCookiesAndGetAccessToken(user);
+
+            await _context.SaveChangesAsync();
+            return Result<UserLogInResponseDTO>.Success(new UserLogInResponseDTO(AccessToken, user));
         }
     }
 }
