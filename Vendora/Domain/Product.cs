@@ -1,10 +1,18 @@
-﻿namespace _product
+﻿using _store;
+using _cartItem;
+using _user;
+namespace _product
 {
     public class Product
     {
         public Ulid Id { get; set; }
+
+        // references
         public Ulid StoreId { get; private set; }
-        public Ulid SellerId { get; private set; }
+
+        public Store Store = null!;
+        public ICollection<CartItem> Items { get; private set; };
+
         public int CategoryId { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
@@ -15,14 +23,13 @@
         // preview
         public string? PreviewUrl { get; set; }
         public bool IsDeleted { get; set; }
-        public Product(Ulid storeId, Ulid sellerId, int categoryId, 
+        public Product(Ulid storeId, int categoryId, 
             string name, string? description, 
             decimal price, int quantity,
             string? previewUrl)
         {
             Id = Ulid.NewUlid();
             StoreId = storeId;
-            SellerId = sellerId;
             CategoryId = categoryId;
             Name = name;
             Description = description;

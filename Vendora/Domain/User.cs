@@ -1,4 +1,6 @@
-﻿namespace _user
+﻿using _cart;
+using _store;
+namespace _user
 {
     public class User
     {
@@ -21,9 +23,19 @@
         public bool IsDeleted { get; set; }
 
         public decimal Balance { get; set; }
+
+        // references
+        public Ulid? StoreId { get; set; } 
+        public Store? Store = null; // np
+
+        public Ulid? CartId { get; set; }
+        public Cart? Cart = null; // np
+        
         public User(string profileName, string firstName, string lastName, string login, string passwordHash, string refreshTokenHash, DateTime refreshTokenExpiresAt, Gender userGender, string? avatarUrl, string? email, string? phone)
         {
             Id = Ulid.NewUlid();
+            StoreId = null;
+            CartId = null;
             ProfileName = profileName;
             FirstName = firstName;
             LastName = lastName;
