@@ -10,9 +10,9 @@
         public string Login { get; set; } 
         public string PasswordHash { get; set; }
         public string RefreshTokenHash { get; set; }
-        public DateTime RefreshTokenExpiresAt { get; set; }
+        public DateTime? RefreshTokenExpiresAt { get; set; }
 
-        public enum Gender { Male = 0, Female = 1 };     
+        public enum Gender { Male = 0, Female = 1, Undefined = 2};     
         public Gender UserGender { get; set; }
 
         public string? AvatarUrl { get;  set; }
@@ -35,6 +35,24 @@
             AvatarUrl = avatarUrl;
             Email = email;
             Phone = phone;
+            IsDeleted = false;
+            Balance = 0;
+        }
+
+        public User(string login, string passwordHash)
+        {
+            Id = Ulid.NewUlid();
+            ProfileName = login;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Login = login;
+            PasswordHash = passwordHash;
+            RefreshTokenHash = string.Empty;
+            RefreshTokenExpiresAt = null;
+            UserGender = Gender.Undefined;
+            AvatarUrl = null;
+            Email = null;
+            Phone = null;
             IsDeleted = false;
             Balance = 0;
         }

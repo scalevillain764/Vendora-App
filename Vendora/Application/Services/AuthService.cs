@@ -26,6 +26,41 @@ namespace _authService
             _context = context;
         }
 
+        public async Task<Result<UserRegistationResponseDTO>> Registr(UserRegistrationDTO DTO)
+        {
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
+
+            if(existingUser != null)
+                return Result<UserRegistationResponseDTO>.Error("Пользователь с таким логином уже существует", ErrorType.Conflict);
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
+
+            var user = new User(DTO.Login, passwordHash);
+
+            _context.Users.Add(user);
+
+            await _context.SaveChangesAsync();
+            return Result<UserRegistationResponseDTO>.Success(new UserRegistationResponseDTO(user.Id, user.Login));
+        }
+
+        public async Task<Result<UserLogInResponseDTO>> LogIn(UserLogInDTO DTO)
+        {
+            var existingUser = await _context.Users
+             .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
+
+            if (existingUser == null)
+                return Result<UserLogInResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            if(!BCrypt.Net.BCrypt.Verify(DTO.Password, existingUser.PasswordHash))
+                return Result<UserLogInResponseDTO>.Error("Неверный пароль", ErrorType.Conflict);
+
+            string accessToken = AppendCookiesAndGetAccessToken(existingUser);
+            await _context.SaveChangesAsync();
+
+            return Result<UserLogInResponseDTO>.Success(new UserLogInResponseDTO(accessToken, existingUser));
+        }
+
         private string AppendCookiesAndGetAccessToken(User user)
         {
             string accessToken = CreateAccessToken(user.Id, user.ProfileName);
@@ -80,28 +115,24 @@ namespace _authService
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Result<UserLogInResponseDTO>> RefreshAsync()
+        public async Task<Result<UserLogInResponseDTO>> RefreshAsync(Ulid userId)
         {
             string existingRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(existingRefreshToken))
                 return Result<UserLogInResponseDTO>.Error("Куки пусты", ErrorType.Unauthorized);
 
-            string existingRefreshTokenHash = BCrypt.Net.BCrypt.HashPassword(existingRefreshToken);
-
             var user = await _context.Users
-                .FirstOrDefaultAsync(x => BCrypt.Net.BCrypt.Verify(existingRefreshTokenHash, x.RefreshTokenHash));
+                .FirstOrDefaultAsync(x => x.Id == userId);
 
             if (user == null)
                 return Result<UserLogInResponseDTO>.Error("Пользователь не найден", ErrorType.Unauthorized);
 
-            if (user.RefreshTokenExpiresAt != null)
-            {
-                if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
-                    return Result<UserLogInResponseDTO>.Error("Сессия истекла", ErrorType.Unauthorized);
-            }
-            else
-                return Result<UserLogInResponseDTO>.Error("Ошибка сессии", ErrorType.Unauthorized);
+            if (user.RefreshTokenExpiresAt == null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
+                return Result<UserLogInResponseDTO>.Error("Сессия истекла", ErrorType.Unauthorized);
+
+            if (!BCrypt.Net.BCrypt.Verify(existingRefreshToken, user.RefreshTokenHash))
+                return Result<UserLogInResponseDTO>.Error("Невалидный токен сессии", ErrorType.Unauthorized);
 
             string AccessToken = AppendCookiesAndGetAccessToken(user);
 
