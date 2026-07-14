@@ -1,14 +1,14 @@
-﻿using _result;
-using _user;
-using _userLogInDTO;
-using _userRegistrationDTO;
-using _userRegistrationResponseDTO;
-using _userLogInResponseDTO;
-namespace _authServiceInterface
+﻿using Application.Result;
+using Domain.Users;
+using Application.DTO.AuthDTO.UserLogInDTOS;
+using Application.DTO.AuthDTO.UserRegistrationDTOS;
+using Application.DTO.AuthDTO.UserRegistrationResponseDTOS;
+using Application.DTO.AuthDTO.UserLogInResponseDTOS;
+namespace Application.Interfaces.AuthServiceInterface
 {
     public interface IAuthService
     {
-        Task<Result<UserRegistationResponseDTO>> Registr(UserRegistrationDTO DTO);
+        Task<Result<UserRegistrationResponseDTO>> Registr(UserRegistrationDTO DTO);
         Task<Result<UserLogInResponseDTO>> LogIn(UserLogInDTO DTO);
     }
 }

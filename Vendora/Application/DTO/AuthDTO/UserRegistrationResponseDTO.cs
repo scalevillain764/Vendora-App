@@ -1,4 +1,4 @@
-﻿namespace _userRegistrationResponseDTO
+﻿namespace Application.DTO.AuthDTO.UserRegistrationResponseDTOS
 {
     public record UserRegistrationResponseDTO
     (

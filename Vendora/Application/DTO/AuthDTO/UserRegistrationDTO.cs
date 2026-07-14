@@ -1,4 +1,4 @@
-﻿namespace _userRegistrationDTO
+﻿namespace Application.DTO.AuthDTO.UserRegistrationDTOS
 {
     public record UserRegistrationDTO(
         string Login,

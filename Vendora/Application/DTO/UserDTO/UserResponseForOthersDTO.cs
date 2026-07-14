@@ -1,5 +1,5 @@
-﻿
-namespace UserDTOForOthers
+﻿using Domain.Users;
+namespace Application.DTO.UserDTO.UserResponseForOthersDTOS
 {
     public record UserResponseForOthersDTO
     (
@@ -12,6 +12,8 @@ namespace UserDTOForOthers
         string? Phone
     )
     {
-        public UserResponseForOthersDTO()
+        public UserResponseForOthersDTO(User user) : 
+            this(user.ProfileName, user.FirstName, user.LastName, user.UserGender.ToString(), user.AvatarUrl, user.Email, user.Email) 
+        { }
     }
 }

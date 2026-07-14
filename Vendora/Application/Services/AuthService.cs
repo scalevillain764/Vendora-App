@@ -1,11 +1,11 @@
-﻿using _authServiceInterface;
-using _error_types;
-using _result;
-using _user;
-using _userLogInDTO;
-using _userLogInResponseDTO;
-using _userRegistrationDTO;
-using _userRegistrationResponseDTO;
+﻿using Application.Interfaces.AuthServiceInterface;
+using Domain.ErrorTypes;
+using Application.Result;
+using Domain.Users;
+using Application.DTO.AuthDTO.UserLogInDTOS;
+using Application.DTO.AuthDTO.UserRegistrationDTOS;
+using Application.DTO.AuthDTO.UserRegistrationResponseDTOS;
+using Application.DTO.AuthDTO.UserLogInResponseDTOS;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -26,13 +26,13 @@ namespace _authService
             _context = context;
         }
 
-        public async Task<Result<UserRegistationResponseDTO>> Registr(UserRegistrationDTO DTO)
+        public async Task<Result<UserRegistrationResponseDTO>> Registr(UserRegistrationDTO DTO)
         {
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
 
             if(existingUser != null)
-                return Result<UserRegistationResponseDTO>.Error("Пользователь с таким логином уже существует", ErrorType.Conflict);
+                return Result<UserRegistrationResponseDTO>.Error("Пользователь с таким логином уже существует", ErrorType.Conflict);
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
 
@@ -41,7 +41,7 @@ namespace _authService
             _context.Users.Add(user);
 
             await _context.SaveChangesAsync();
-            return Result<UserRegistationResponseDTO>.Success(new UserRegistationResponseDTO(user.Id, user.Login));
+            return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));
         }
 
         public async Task<Result<UserLogInResponseDTO>> LogIn(UserLogInDTO DTO)

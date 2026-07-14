@@ -1,8 +1,8 @@
-﻿using _cart;
-using _cartItem;
-using _product;
-using _store;
-using _user;
+﻿using Domain.Carts;
+using Domain.CartItems;
+using Domain.Products;
+using Domain.Stores;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 namespace _appDbContext
 {

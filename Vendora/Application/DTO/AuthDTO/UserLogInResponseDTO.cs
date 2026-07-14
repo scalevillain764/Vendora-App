@@ -1,5 +1,5 @@
-﻿using _user;
-namespace _userLogInResponseDTO
+﻿using Domain.Users;
+namespace Application.DTO.AuthDTO.UserLogInResponseDTOS
 {
     public record UserLogInResponseDTO(
         Ulid UserId,
@@ -7,5 +7,10 @@ namespace _userLogInResponseDTO
         string ProfileName,
         string FirstName,
         string LastName
-    );
+    )
+    {
+        public UserLogInResponseDTO(string accessToken, User user) :
+            this(user.Id, accessToken, user.ProfileName, user.FirstName, user.LastName)
+        { }
+    };
 }

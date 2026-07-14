@@ -1,6 +1,6 @@
-﻿using _error_types;
+﻿using Domain.ErrorTypes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-namespace _result
+namespace Application.Result
 {
     public class Result<T> where T : class
     {
