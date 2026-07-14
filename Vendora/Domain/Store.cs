@@ -1,6 +1,6 @@
-﻿using _product;
-using _user;
-namespace _store
+﻿using Domain.Products;
+using Domain.Users;
+namespace Domain.Stores
 {
     public class Store
     {

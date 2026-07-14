@@ -1,4 +1,4 @@
-﻿namespace _error_types
+﻿namespace Domain.ErrorTypes
 {
     public enum ErrorType {
         Validation,

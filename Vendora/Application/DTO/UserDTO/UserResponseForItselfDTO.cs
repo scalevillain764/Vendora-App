@@ -1,5 +1,5 @@
 ﻿using _user;
-namespace _userDTO
+namespace UserDTOForItself
 {
     public record UserResponseForItselfDTO(
         string ProfileName,

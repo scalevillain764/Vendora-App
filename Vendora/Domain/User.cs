@@ -1,6 +1,6 @@
-﻿using _cart;
-using _store;
-namespace _user
+﻿using Domain.Carts;
+using Domain.Stores;
+namespace Domain.Users
 {
     public class User
     {

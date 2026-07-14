@@ -1,7 +1,7 @@
-﻿using _user;
-using _product;
-using _cart;
-namespace _cartItem
+﻿using Domain.Users;
+using Domain.Products;
+using Domain.Carts;
+namespace Domain.CartItems
 {
     public class CartItem
     {
