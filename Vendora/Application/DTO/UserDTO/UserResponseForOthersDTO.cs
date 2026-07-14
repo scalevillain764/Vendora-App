@@ -1,5 +1,5 @@
 ﻿using Domain.Users;
-namespace Application.DTO.UserDTO.UserResponseForOthersDTOS
+namespace Application.DTO.UserDTO
 {
     public record UserResponseForOthersDTO
     (

@@ -1,5 +1,5 @@
 ﻿using Domain.Users;
-namespace Application.DTO.UserDTO.UserResponseForItselfDTOS 
+namespace Application.DTO.UserDTO
 {
     public record UserResponseForItselfDTO(
         string ProfileName,

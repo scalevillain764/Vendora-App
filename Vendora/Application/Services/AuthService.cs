@@ -1,11 +1,8 @@
-﻿using Application.Interfaces.AuthServiceInterface;
+﻿using IAuthService = Application.Interfaces.IAuthService;
 using Domain.ErrorTypes;
 using Application.Result;
 using Domain.Users;
-using Application.DTO.AuthDTO.UserLogInDTOS;
-using Application.DTO.AuthDTO.UserRegistrationDTOS;
-using Application.DTO.AuthDTO.UserRegistrationResponseDTOS;
-using Application.DTO.AuthDTO.UserLogInResponseDTOS;
+using Application.DTO.AuthDTO;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

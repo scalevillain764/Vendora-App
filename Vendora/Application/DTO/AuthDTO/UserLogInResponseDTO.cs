@@ -1,5 +1,5 @@
 ﻿using Domain.Users;
-namespace Application.DTO.AuthDTO.UserLogInResponseDTOS
+namespace Application.DTO.AuthDTO
 {
     public record UserLogInResponseDTO(
         Ulid UserId,

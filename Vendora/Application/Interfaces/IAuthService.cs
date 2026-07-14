@@ -1,10 +1,7 @@
 ﻿using Application.Result;
 using Domain.Users;
-using Application.DTO.AuthDTO.UserLogInDTOS;
-using Application.DTO.AuthDTO.UserRegistrationDTOS;
-using Application.DTO.AuthDTO.UserRegistrationResponseDTOS;
-using Application.DTO.AuthDTO.UserLogInResponseDTOS;
-namespace Application.Interfaces.AuthServiceInterface
+using Application.DTO.AuthDTO;
+namespace Application.Interfaces
 {
     public interface IAuthService
     {
