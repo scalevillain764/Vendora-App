@@ -1,6 +1,7 @@
 ﻿namespace Application.DTO.UserDTO
 {
     public record UserChangePasswordDTO(
-        string Password
+        string NewPassword,
+        string OldPassword
     );
 }

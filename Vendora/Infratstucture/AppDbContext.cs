@@ -4,7 +4,7 @@ using Domain.Products;
 using Domain.Stores;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
-namespace _appDbContext
+namespace Infrastructure.AppDbContexts
 {
     public class AppDbContext : DbContext
     {

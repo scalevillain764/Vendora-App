@@ -1,15 +1,16 @@
-﻿using IAuthService = Application.Interfaces.IAuthService;
-using Domain.ErrorTypes;
+﻿using Application.DTO.AuthDTO;
+using Application.DTO.UserDTO;
 using Application.Result;
+using Domain.ErrorTypes;
 using Domain.Users;
-using Application.DTO.AuthDTO;
+using Infrastructure.AppDbContexts;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using _appDbContext;
-using Microsoft.EntityFrameworkCore;
-namespace _authService
+using IAuthService = Application.Interfaces.IAuthService;
+namespace Application.Services
 {
     public class AuthService : IAuthService
     {
@@ -23,7 +24,7 @@ namespace _authService
             _context = context;
         }
 
-        public async Task<Result<UserRegistrationResponseDTO>> Registr(UserRegistrationDTO DTO)
+        public async Task<Result<UserRegistrationResponseDTO>> RegistrAsync(UserRegistrationDTO DTO)
         {
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
@@ -40,22 +41,21 @@ namespace _authService
             await _context.SaveChangesAsync();
             return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));
         }
-
-        public async Task<Result<UserLogInResponseDTO>> LogIn(UserLogInDTO DTO)
+        public async Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO)
         {
             var existingUser = await _context.Users
              .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
 
             if (existingUser == null)
-                return Result<UserLogInResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+                return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
 
             if(!BCrypt.Net.BCrypt.Verify(DTO.Password, existingUser.PasswordHash))
-                return Result<UserLogInResponseDTO>.Error("Неверный пароль", ErrorType.Conflict);
+                return Result<AuthResponseDTO>.Error("Неверный пароль", ErrorType.Conflict);
 
             string accessToken = AppendCookiesAndGetAccessToken(existingUser);
             await _context.SaveChangesAsync();
 
-            return Result<UserLogInResponseDTO>.Success(new UserLogInResponseDTO(accessToken, existingUser));
+            return Result<AuthResponseDTO>.Success(new AuthResponseDTO(existingUser.Id, accessToken));
         }
 
         private string AppendCookiesAndGetAccessToken(User user)
@@ -112,29 +112,74 @@ namespace _authService
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Result<UserLogInResponseDTO>> RefreshAsync(Ulid userId)
+        public async Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId)
         {
             string existingRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(existingRefreshToken))
-                return Result<UserLogInResponseDTO>.Error("Куки пусты", ErrorType.Unauthorized);
+                return Result<AuthResponseDTO>.Error("Куки пусты", ErrorType.Unauthorized);
 
             var user = await _context.Users
                 .FirstOrDefaultAsync(x => x.Id == userId);
 
             if (user == null)
-                return Result<UserLogInResponseDTO>.Error("Пользователь не найден", ErrorType.Unauthorized);
+                return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.Unauthorized);
 
             if (user.RefreshTokenExpiresAt == null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
-                return Result<UserLogInResponseDTO>.Error("Сессия истекла", ErrorType.Unauthorized);
+                return Result<AuthResponseDTO>.Error("Сессия истекла", ErrorType.Unauthorized);
 
             if (!BCrypt.Net.BCrypt.Verify(existingRefreshToken, user.RefreshTokenHash))
-                return Result<UserLogInResponseDTO>.Error("Невалидный токен сессии", ErrorType.Unauthorized);
+                return Result<AuthResponseDTO>.Error("Невалидный токен сессии", ErrorType.Unauthorized);
 
             string AccessToken = AppendCookiesAndGetAccessToken(user);
 
             await _context.SaveChangesAsync();
-            return Result<UserLogInResponseDTO>.Success(new UserLogInResponseDTO(AccessToken, user));
+            return Result<AuthResponseDTO>.Success(new AuthResponseDTO(user.Id, AccessToken));
+        }
+
+        public async Task<Result<AuthResponseDTO>> ChangeUserPasswordAsync(Ulid UserId, UserChangePasswordDTO DTO)
+        {
+            var user = await _context.Users
+              .FindAsync(UserId);
+
+            if (user == null)
+                return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            if (!BCrypt.Net.BCrypt.Verify(DTO.OldPassword, user.PasswordHash))
+                return Result<AuthResponseDTO>.Error("Старый пароль не подходит", ErrorType.Validation);
+
+            string newPasswordHash = BCrypt.Net.BCrypt.HashPassword(DTO.NewPassword, workFactor: 11);
+            user.PasswordHash = newPasswordHash;
+
+            string newAccess = AppendCookiesAndGetAccessToken(user);
+
+            await _context.SaveChangesAsync();
+
+            return Result<AuthResponseDTO>.Success(new AuthResponseDTO(user.Id, newAccess));
+        }
+
+        public async Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO)
+        {
+            var user = await _context.Users
+               .FindAsync(UserId);
+
+            if (user == null)
+                return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            if (!BCrypt.Net.BCrypt.Verify(DTO.Password, user.PasswordHash))
+                return Result<UserResponseForItselfDTO>.Error("Неверный пароль", ErrorType.Validation);
+
+            bool loginExists = await _context.Users
+                .AnyAsync(x => x.Login == DTO.Login && x.Id != UserId);
+
+            if (loginExists)
+                return Result<UserResponseForItselfDTO>.Error("Такой логин уже существует", ErrorType.Conflict);
+
+            user.Login = DTO.Login;
+
+            await _context.SaveChangesAsync();
+
+            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
         }
     }
 }

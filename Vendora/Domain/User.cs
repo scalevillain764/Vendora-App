@@ -11,7 +11,7 @@ namespace Domain.Users
 
         public string Login { get; set; } 
         public string PasswordHash { get; set; }
-        public string RefreshTokenHash { get; set; }
+        public string? RefreshTokenHash { get; set; }
         public DateTime? RefreshTokenExpiresAt { get; set; }
 
         public enum Gender { Male = 0, Female = 1, Undefined = 2};     
