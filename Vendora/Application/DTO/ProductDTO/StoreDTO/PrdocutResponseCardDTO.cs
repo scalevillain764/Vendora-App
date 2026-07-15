@@ -2,7 +2,7 @@
 namespace Application.DTO.ProductDTO.StoreDTO
 {
     public record ProductCardDTO (
-        string StoreName,
+        string StoreName,   
         string Name,
         decimal Price,
         string? PreviewUrl

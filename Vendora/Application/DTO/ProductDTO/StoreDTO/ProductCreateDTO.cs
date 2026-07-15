@@ -2,7 +2,7 @@
 {
     public record ProductCreationDTO(
          string StoreId,
-         int CategoryId,
+         int Category,
          string Name,
          string? Description,
          decimal Price,

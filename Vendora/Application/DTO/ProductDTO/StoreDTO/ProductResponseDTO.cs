@@ -3,7 +3,7 @@ namespace Application.DTO.ProductDTO.StoreDTO
 {
     public record ProductResponseDTO(
          string StoreId,
-         int CategoryId,
+         string Category,
          string Name,
          string? Description,
          decimal Price,
@@ -13,7 +13,7 @@ namespace Application.DTO.ProductDTO.StoreDTO
     )
     {
         public ProductResponseDTO(Product pr) : 
-            this(pr.StoreId.ToString(), pr.CategoryId, pr.Name, pr.Description, pr.Price, pr.Quantity, pr.PreviewUrl, pr.Article)
+            this(pr.StoreId.ToString(), pr.Category.ToString(), pr.Name, pr.Description, pr.Price, pr.Quantity, pr.PreviewUrl, pr.Article)
         { }
     }
 }

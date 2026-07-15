@@ -24,18 +24,14 @@ namespace Domain.Users
 
         public decimal Balance { get; set; }
 
-        // references
-        public Ulid? StoreId { get; set; } 
-        public Store? Store = null; // np
+        // references 
+        public Store? Store { get; set; } = null; // np
 
-        public Ulid? CartId { get; set; }
-        public Cart? Cart = null; // np
+        public Cart? Cart { get; set; } = null; // np
         
         public User(string profileName, string firstName, string lastName, string login, string passwordHash, string refreshTokenHash, DateTime refreshTokenExpiresAt, Gender userGender, string? avatarUrl, string? email, string? phone)
         {
             Id = Ulid.NewUlid();
-            StoreId = null;
-            CartId = null;
             ProfileName = profileName;
             FirstName = firstName;
             LastName = lastName;

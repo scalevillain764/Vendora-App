@@ -1,14 +1,17 @@
-﻿using Domain.Carts;
-using Domain.CartItems;
+﻿using Domain.CartItems;
+using Domain.Carts;
 using Domain.Products;
 using Domain.Stores;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using System.Xml;
 namespace Infrastructure.AppDbContexts
 {
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Store> Stores { get; set; }
+        public DbSet<Product> Products { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +39,10 @@ namespace Infrastructure.AppDbContexts
                 .HasOne(ct => ct.Product)
                 .WithMany(p => p.Items)
                 .HasForeignKey(ct => ct.ProductId);
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Article)
+                .HasIdentityOptions(startValue: 10000000);
         }
     }
 }
