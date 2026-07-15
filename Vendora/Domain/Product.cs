@@ -11,7 +11,7 @@ namespace Domain.Products
         public Ulid StoreId { get; private set; }
 
         public Store Store = null!;
-        public ICollection<CartItem> Items { get; private set; };
+        public ICollection<CartItem> Items { get; private set; }
 
         public int CategoryId { get; set; }
         public string Name { get; set; }
