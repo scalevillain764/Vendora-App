@@ -47,22 +47,22 @@ namespace Application.Services
                 : Result<UserResponseForOthersDTO>.Error("Пользователь не найден", ErrorType.NotFound);
         }
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO)
-            => await ChangeUserPropertyAsync(UserId, u => u.ProfileName = DTO.ProfileName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO)
+            => ChangeUserPropertyAsync(UserId, u => u.ProfileName = DTO.ProfileName);
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO)
-           => await ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO)
+           =>  ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName);
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO)
-            => await ChangeUserPropertyAsync(UserId, u => u.LastName = DTO.LastName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO)
+            => ChangeUserPropertyAsync(UserId, u => u.LastName = DTO.LastName);
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO)
-            => await ChangeUserPropertyAsync(UserId, u => u.Email = DTO.Email);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO)
+            => ChangeUserPropertyAsync(UserId, u => u.Email = DTO.Email);
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO)
-           => await ChangeUserPropertyAsync(UserId, u => u.Phone = DTO.Phone);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO)
+           => ChangeUserPropertyAsync(UserId, u => u.Phone = DTO.Phone);
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO)
-            => await ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);       
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO)
+            => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);       
     } 
 }
