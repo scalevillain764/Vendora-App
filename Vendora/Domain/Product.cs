@@ -1,6 +1,7 @@
 ﻿using Domain.Stores;
 using Domain.CartItems;
 using Domain.Users;
+using Domain.OrderItems;
 namespace Domain.Products
 {
     public class Product
@@ -11,8 +12,10 @@ namespace Domain.Products
         public Ulid StoreId { get; private set; }
 
         public Store Store = null!;
-        public List<CartItem> Items { get; private set; } = new();
 
+        public List<CartItem> CartItems { get; private set; } = new();
+        public List<OrderItem> OrderItems { get; private set; } = new();
+    
         public enum ProductCategory
         {
             None = 0,                    // Не указано / Системное

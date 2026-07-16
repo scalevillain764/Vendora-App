@@ -20,9 +20,7 @@ namespace Domain.Orders
             Cancelled
         }
         public OrderStatus Status { get; set; }
-
         public DateTime CreatedAt { get; set; }
-
         public ICollection<OrderItem> Items { get; set; } = [];
     }
 }

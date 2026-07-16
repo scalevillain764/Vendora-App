@@ -3,6 +3,8 @@ using Domain.Carts;
 using Domain.Products;
 using Domain.Stores;
 using Domain.Users;
+using Domain.OrderItems;
+using Domain.Orders;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
 namespace Infrastructure.AppDbContexts
@@ -35,14 +37,24 @@ namespace Infrastructure.AppDbContexts
                 .WithOne(p => p.Store)
                 .HasForeignKey(p => p.StoreId);
 
-            modelBuilder.Entity<CartItem>() // cart item with product
+            modelBuilder.Entity<CartItem>() // cartItems with product
                 .HasOne(ct => ct.Product)
-                .WithMany(p => p.Items)
+                .WithMany(p => p.CartItems)
                 .HasForeignKey(ct => ct.ProductId);
 
             modelBuilder.Entity<Product>()
                 .Property(p => p.Article)
                 .HasIdentityOptions(startValue: 10000000);
+
+            modelBuilder.Entity<OrderItem>() // orderItems with orders
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.Items)
+                .HasForeignKey(oi => oi.OrderId);
+
+            modelBuilder.Entity<OrderItem>() // orderItems with product
+                .HasOne(oi => oi.Product)
+                .WithMany(p => p.OrderItems)
+                .HasForeignKey(oi => oi.ProductId);
         }
     }
 }
