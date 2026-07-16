@@ -5,7 +5,7 @@ namespace Application.Interfaces
     public interface IUserService
     {
         Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId);
-        Task<Result<UserResponseForOthersDTO>> GetOtherAsync(Ulid UserId);
+        Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId);
         Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO);

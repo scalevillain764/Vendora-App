@@ -38,7 +38,7 @@ namespace Application.Services
                 : Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
         }
 
-        public async Task<Result<UserResponseForOthersDTO>> GetOtherAsync(Ulid UserId)
+        public async Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId)
         {
             var user = await _context.Users
                 .FindAsync(UserId);
