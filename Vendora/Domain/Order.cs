@@ -12,15 +12,26 @@ namespace Domain.Orders
         public decimal TotalPrice { get; set; }
         public enum OrderStatus
         {
-            Created,
-            Paid,
-            Processing,
-            Shipped,
-            Delivered,
+            Pending,    // Waiting for payment
+            PaymentCompleted,  
+            PaymentFailed,
+            Refunded,    // Money returned 
+            InDelivery,
+            ReadyForPickup,
+            Completed, // Product is given and paid
             Cancelled
         }
         public OrderStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public ICollection<OrderItem> Items { get; set; } = [];
+
+        public Order(Ulid userId, decimal totalPrice)
+        {
+            Id = Ulid.NewUlid();
+            UserId = userId;
+            TotalPrice = totalPrice;
+            Status = OrderStatus.Pending;
+            CreatedAt = DateTime.UtcNow;
+        }
     }
 }

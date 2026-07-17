@@ -1,4 +1,5 @@
 ﻿using Domain.Orders;
+using Domain.CartItems;
 using Domain.Products;
 namespace Domain.OrderItems
 {
@@ -15,5 +16,15 @@ namespace Domain.OrderItems
         public string ProductName { get; set; }
         public decimal Price { get; set; }
         public int Quantity { get; set; }
+
+        public OrderItem(Order order, CartItem item)
+        {
+            Id = Ulid.NewUlid();
+            OrderId = order.Id;
+            ProductId = item.ProductId;
+            ProductName = item.Product.Name;
+            Price = item.Product.Price;
+            Quantity = item.Quantity;
+        }
     }
 }
