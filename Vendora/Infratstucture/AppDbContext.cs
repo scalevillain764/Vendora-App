@@ -51,7 +51,7 @@ namespace Infrastructure.AppDbContexts
                 .WithMany(o => o.Items)
                 .HasForeignKey(oi => oi.OrderId);
 
-            modelBuilder.Entity<OrderItem>() // orderItems with product
+            modelBuilder.Entity<OrderItem>() // orderItems with 
                 .HasOne(oi => oi.Product)
                 .WithMany(p => p.OrderItems)
                 .HasForeignKey(oi => oi.ProductId);
