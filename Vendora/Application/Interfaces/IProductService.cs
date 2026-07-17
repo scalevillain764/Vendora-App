@@ -12,5 +12,6 @@ namespace Application.Interfaces
         Task<Result<ProductResponseDTO>> ChangeProductQuantityAsync(Ulid UserId, Ulid ProductId, ProductChangeQuantityDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeDescriptionDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductPriceAsync(Ulid UserId, Ulid ProductId, ProductChangePriceDTO DTO);
-    }
+        Task<Result<ProductResponseDTO>> GetProduct(Ulid ProductId);
+    } 
 }

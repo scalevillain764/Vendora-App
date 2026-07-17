@@ -80,6 +80,17 @@ namespace Application.Services
             return Result<ProductResponseDTO>.Success(productDTO);
         }
 
+        public async Task<Result<ProductResponseDTO>> GetProduct(Ulid ProductId)
+        {
+            var product = await _context.Products
+                .FindAsync(ProductId);
+
+            return product != null
+                ? Result<ProductResponseDTO>.Success(new ProductResponseDTO(product))
+                : Result<ProductResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+        }
+
+
         public Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO)
             =>  ChangeProductProperty(UserId, ProductId, x => x.Name = DTO.Name);
 
