@@ -15,12 +15,15 @@ namespace Domain.CartItems
         public Product Product { get; set; } = null!;
 
         public int Quantity { get; set; }
-        public CartItem (Ulid cartId, Ulid productId, int quantity)
+        public int PricePerUnit { get; set; }
+
+        public CartItem (Ulid cartId, Ulid productId, int quantity, int pricePerUnit)
         {
             Id = Ulid.NewUlid();
             CartId = cartId;
             ProductId = productId;
             Quantity = quantity;
+            PricePerUnit = pricePerUnit;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Carts;
 using Domain.Stores;
+using Domain.Orders;
 namespace Domain.Users
 {
     public class User
@@ -26,8 +27,8 @@ namespace Domain.Users
 
         // references 
         public Store? Store { get; set; } = null; // np
-
         public Cart? Cart { get; set; } = null; // np
+        public ICollection<Order> Orders { get; set; } = []; // np
         
         public User(string profileName, string firstName, string lastName, string login, string passwordHash, string refreshTokenHash, DateTime refreshTokenExpiresAt, Gender userGender, string? avatarUrl, string? email, string? phone)
         {

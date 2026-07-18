@@ -1,15 +1,18 @@
 ﻿using Domain.OrderItems;
 using Domain.Orders;
+using Domain.Users;
+using Application.DTO.OrderDTO.OrderItemDTO;
 namespace Application.DTO.OrderDTO
 {
     public record OrderResponseDTO (
         Ulid OrderId,
         Ulid UserId,
         string UserProfileName,
-        string TotalPrice,
-        string Quantity,
-        List<string> ProductNames)
+        decimal TotalPrice,
+        List<OrderItemResponseDTO> Items)
     {
-        public OrderResponseDTO ()
+        public OrderResponseDTO (Order order, User user, List<OrderItemResponseDTO> ProductNames) :
+            this(order.Id, user.Id, user.ProfileName, order.TotalPrice, ProductNames)
+        { }
     }
 }
