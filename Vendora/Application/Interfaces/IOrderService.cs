@@ -6,6 +6,6 @@ namespace Application.Interfaces
 {
     public interface IOrderService
     {
-        Task<Result<OrderResponseDTO>> CreateOrder(Ulid UserId);
+        Task<Result<OrderResponseDTO>> CreatePendingOrderAsync(Ulid UserId);
     }
 }

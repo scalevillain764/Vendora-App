@@ -14,7 +14,7 @@ namespace Domain.OrderItems
         public Product Product { get; set; } = null!;
 
         public string ProductName { get; set; }
-        public decimal TotalPrice { get; set; }
+        public decimal PricePerUnit { get; set; }
         public int Quantity { get; set; }
 
         public OrderItem(Order order, CartItem item)
@@ -23,7 +23,7 @@ namespace Domain.OrderItems
             OrderId = order.Id;
             ProductId = item.ProductId;
             ProductName = item.Product.Name;
-            TotalPrice = item.PricePerUnit * item.Quantity;
+            PricePerUnit = item.PricePerUnit;
             Quantity = item.Quantity;
         }
     }

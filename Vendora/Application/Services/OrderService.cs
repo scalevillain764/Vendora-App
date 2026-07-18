@@ -1,13 +1,14 @@
 ﻿using Application.DTO.OrderDTO;
-using Domain.Carts;
-using Domain.CartItems;
-using Domain.Orders;
+using Application.DTO.OrderDTO.OrderItemDTO;
 using Application.Result;
-using Infrastructure.AppDbContexts;
-using IOrderService = Application.Interfaces.IOrderService;
-using Microsoft.EntityFrameworkCore;
+using Domain.CartItems;
+using Domain.Carts;
 using Domain.ErrorTypes;
 using Domain.OrderItems;
+using Domain.Orders;
+using Infrastructure.AppDbContexts;
+using Microsoft.EntityFrameworkCore;
+using IOrderService = Application.Interfaces.IOrderService;
 namespace Application.Services
 {
     public class OrderService : IOrderService
@@ -17,24 +18,26 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<OrderResponseDTO>> CreateOrder(Ulid UserId)
-        {
-            var user = await _context.Users
-                    .Include(x => x.Cart)
-                        .ThenInclude(x => x.Items)
-                            .ThenInclude(x => x.Product)
-                                .FirstOrDefaultAsync(x => x.Id == UserId);
-
-            if (user == null)
-                return Result<OrderResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
-
-            var cart = user.Cart;
+        public async Task<Result<OrderResponseDTO>> CreatePendingOrderAsync(Ulid UserId)
+        {       
+            var cart = await _context.Carts
+                 .Include(x => x.Items)
+                    .ThenInclude(x => x.Product)
+                        .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if(cart == null)
                 return Result<OrderResponseDTO>.Error("Корзина отсутствует", ErrorType.NotFound); // need to refactor and fix
 
             if(!cart.Items.Any())
                 return Result<OrderResponseDTO>.Error("Корзина пуста", ErrorType.Conflict);
+
+            foreach (var item in cart.Items)
+            {
+                if (item.Product.Quantity < item.Quantity)
+                    return Result<OrderResponseDTO>.Error($"Недостаточно товара: {item.Product.Name}", ErrorType.Conflict);
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             decimal totalPrice = cart.Items.Sum(x => x.PricePerUnit * x.Quantity);
 
@@ -46,14 +49,22 @@ namespace Application.Services
 
             newOrder.Items = orderItems;
 
-            _context.
+            _context.Orders.Add(newOrder);
+            _context.CartItems.RemoveRange(cart.Items);
+
+            foreach (var item in cart.Items)
+            {
+                item.Product.Quantity -= item.Quantity;
+            }
+
             await _context.SaveChangesAsync();
+            await _context.Database.CommitTransactionAsync();
 
-            var productNames = orderItems
-                .Select(x => new KeyValuePair<string, int>(x.ProductName, x.Quantity))
-                .ToDictionary();
-
-            return Result<OrderResponseDTO>.Success(new OrderResponseDTO(newOrder, user, productNames));
+            var orderItemResponseDTOS = orderItems
+                .Select(x => new OrderItemResponseDTO(x))
+                .ToList();
+         
+            return Result<OrderResponseDTO>.Success(new OrderResponseDTO(newOrder.Id, UserId, totalPrice, orderItemResponseDTOS));
         }
     }
 }
