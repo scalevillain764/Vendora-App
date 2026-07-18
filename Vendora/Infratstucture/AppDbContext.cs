@@ -23,7 +23,7 @@ namespace Infrastructure.AppDbContexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // user
-            modelBuilder.Entity<User>() // user with shop
+            modelBuilder.Entity<User>() // user with store
                 .HasOne(u => u.Store)
                 .WithOne(s => s.Seller)
                 .HasForeignKey<Store>(s => s.SellerId);
