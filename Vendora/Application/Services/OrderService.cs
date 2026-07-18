@@ -18,7 +18,7 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<OrderResponseDTO>> CreatePendingOrderAsync(Ulid UserId)
+        public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId)
         {       
             var cart = await _context.Carts
                  .Include(x => x.Items)
@@ -26,15 +26,15 @@ namespace Application.Services
                         .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if(cart == null)
-                return Result<OrderResponseDTO>.Error("Корзина отсутствует", ErrorType.NotFound); // need to refactor and fix
+                return Result<OrderPreviewDTO>.Error("Корзина отсутствует", ErrorType.NotFound); // need to refactor and fix
 
             if(!cart.Items.Any())
-                return Result<OrderResponseDTO>.Error("Корзина пуста", ErrorType.Conflict);
+                return Result<OrderPreviewDTO>.Error("Корзина пуста", ErrorType.Conflict);
 
             foreach (var item in cart.Items)
             {
                 if (item.Product.Quantity < item.Quantity)
-                    return Result<OrderResponseDTO>.Error($"Недостаточно товара: {item.Product.Name}", ErrorType.Conflict);
+                    return Result<OrderPreviewDTO>.Error($"Недостаточно товара: {item.Product.Name}", ErrorType.Conflict);
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -64,7 +64,9 @@ namespace Application.Services
                 .Select(x => new OrderItemResponseDTO(x))
                 .ToList();
          
-            return Result<OrderResponseDTO>.Success(new OrderResponseDTO(newOrder.Id, UserId, totalPrice, orderItemResponseDTOS));
+            return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder.Id, UserId, totalPrice, newOrder.Status.ToString(), orderItemResponseDTOS));
         }
+
+
     }
 }
