@@ -18,6 +18,25 @@ namespace Application.Services
         {
             _context = context;
         }
+        private async Task<Result<OrderResponseDTO>> ChangeOrderStatusAsync(Ulid orderId, Action<Order> action)
+        {
+            var order = await _context.Orders
+                    .Include(o => o.Items)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                return Result<OrderResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
+
+            action(order);
+
+            await _context.SaveChangesAsync();
+
+            var orderItemResponseDTOS = order.Items
+                .Select(x => new OrderItemResponseDTO(x))
+                .ToList();
+
+            return Result<OrderResponseDTO>.Success(new OrderResponseDTO(order, orderItemResponseDTOS));
+        }
         public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId)
         {       
             var cart = await _context.Carts
@@ -58,15 +77,19 @@ namespace Application.Services
             }
 
             await _context.SaveChangesAsync();
-            await _context.Database.CommitTransactionAsync();
+            await transaction.CommitAsync();
 
             var orderItemResponseDTOS = orderItems
                 .Select(x => new OrderItemResponseDTO(x))
                 .ToList();
          
-            return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder.Id, UserId, totalPrice, newOrder.Status.ToString(), orderItemResponseDTOS));
+            return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOS));
         }
 
+        public Task<Result<OrderResponseDTO>> ConfirmPaymentAsync(Ulid orderId)
+            => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentCompleted);
 
+        public Task<Result<OrderResponseDTO>> FailPaymentAsync(Ulid orderId)
+              => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentFailed);
     }
 }
