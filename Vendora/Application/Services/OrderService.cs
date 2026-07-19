@@ -42,6 +42,7 @@ namespace Application.Services
             var cart = await _context.Carts
                  .Include(x => x.Items)
                     .ThenInclude(x => x.Product)
+                        .ThenInclude(x => x.Store)
                         .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if(cart == null)
@@ -63,7 +64,7 @@ namespace Application.Services
             var newOrder = new Order(UserId, totalPrice);
 
             var orderItems = cart.Items
-                .Select(x => new OrderItem(newOrder, x))
+                .Select(x => new OrderItem(newOrder, x, x.Product.Store.SellerId))
                 .ToList();
 
             newOrder.Items = orderItems;

@@ -10,7 +10,6 @@ namespace Domain.Products
 
         // references
         public Ulid StoreId { get; private set; }
-
         public Store Store { get; set; } = null!;
 
         public List<CartItem> CartItems { get; private set; } = new();
