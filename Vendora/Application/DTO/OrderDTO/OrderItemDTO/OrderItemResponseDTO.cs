@@ -2,13 +2,17 @@
 namespace Application.DTO.OrderDTO.OrderItemDTO
 {
     public record OrderItemResponseDTO(
+        Ulid ProductId,
+        Ulid StoreId,
         string ProductName,
-        decimal TotalPrice,
+        decimal pricePerUnit,
         int Quantity
         )
     {
         public OrderItemResponseDTO(OrderItem orderItem) :
-            this(orderItem.Product.Name, orderItem.PricePerUnit * orderItem.Quantity, orderItem.Quantity)
+            this(orderItem.ProductId, orderItem.StoreId,
+                orderItem.Product.Name, 
+                orderItem.PricePerUnit, orderItem.Quantity)
         { }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Orders;
 using Domain.CartItems;
+using Domain.Stores;
 using Domain.Products;
 namespace Domain.OrderItems
 {
@@ -12,6 +13,9 @@ namespace Domain.OrderItems
 
         public Ulid ProductId { get; set; }
         public Product Product { get; set; } = null!;
+
+        public Ulid StoreId { get; set; }
+        public Store Store { get; set; } = null!;
 
         public string ProductName { get; set; }
         public decimal PricePerUnit { get; set; }
