@@ -1,6 +1,7 @@
 ﻿using Application.DTO.PaymentDTO;
 using Application.Result;
 using Infrastructure.AppDbContexts;
+using Domain.Payments;
 using Microsoft.EntityFrameworkCore;
 using Domain.ErrorTypes;
 using IOrderService = Application.Interfaces.IOrderService;
@@ -52,6 +53,9 @@ namespace Application.Services
 
             user.Balance -= order.TotalPrice;
 
+            var payment = new Payment(order.Id, null, order.TotalPrice, Payment.PaymentMethod.Balance);
+            _context.Payments.Add(payment);
+
             var globalPayments = await _context.OrderItems
                 .Where(x => x.OrderId == OrderId)
                     .Select(x => new
@@ -76,21 +80,22 @@ namespace Application.Services
             if (globalPayments.Count != sellers.Count)
             {
                 await _orderService.FailPaymentAsync(OrderId);
+                payment.Status = Payment.PaymentStatus.Failed;
                 return Result<PaymentFromBalanceResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
             }
                 
-
             foreach(var seller in sellers)
             {
                 seller.Balance += globalPayments[seller.Id];
             }
 
             await _orderService.ConfirmPaymentAsync(OrderId);
+            payment.Status = Payment.PaymentStatus.Success;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
             return Result<PaymentFromBalanceResponseDTO>.Success(new PaymentFromBalanceResponseDTO(OrderId, "OK"));
         }
-
+        P
     }
 }
