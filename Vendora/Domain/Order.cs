@@ -1,6 +1,6 @@
 ﻿using Domain.OrderItems;
 using Domain.Users;
-using Domain.Payments;
+using Domain.Transactions;
 namespace Domain.Orders
 {
     public class Order
@@ -25,7 +25,7 @@ namespace Domain.Orders
         public OrderStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public ICollection<OrderItem> Items { get; set; } = [];
-        public ICollection<Payment> Payments { get; set; } = [];
+        public ICollection<Transaction> Transactions { get; set; } = [];
 
         public Order(Ulid userId, decimal totalPrice)
         {

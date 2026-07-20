@@ -1,7 +1,7 @@
 ﻿using Domain.Orders;
-namespace Domain.Payments
+namespace Domain.Transactions
 {
-    public class Payment
+    public class Transaction
     {
         public Ulid Id { get; set; }
         
@@ -18,7 +18,7 @@ namespace Domain.Payments
         public enum PaymentStatus {Pending = 1, Success = 2, Failed = 3};
         public PaymentStatus Status { get; set; }
 
-        public Payment(Ulid orderId, string? externalPaymentId, decimal amount, PaymentMethod method)
+        public Transaction(Ulid orderId, string? externalPaymentId, decimal amount, PaymentMethod method)
         {
             Id = Ulid.NewUlid();
             OrderId = orderId;

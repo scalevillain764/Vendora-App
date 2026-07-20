@@ -1,9 +1,10 @@
 ﻿using Application.DTO.PaymentDTO;
 using Application.Result;
-using Infrastructure.AppDbContexts;
-using Domain.Payments;
-using Microsoft.EntityFrameworkCore;
 using Domain.ErrorTypes;
+using Domain.Transactions;
+using Infrastructure.AppDbContexts;
+using Microsoft.EntityFrameworkCore;
+using Yandex.Checkout.V3;
 using IOrderService = Application.Interfaces.IOrderService;
 using IPaymentService = Application.Interfaces.IPaymentService;
 namespace Application.Services
@@ -24,13 +25,13 @@ namespace Application.Services
 
             if (order == null)
             {
-                await _orderService.FailPaymentAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
                 return Result<PaymentFromBalanceResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
             }
                 
             if(order.UserId != UserId)
             {
-                await _orderService.FailPaymentAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
                 return Result<PaymentFromBalanceResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
             }
                 
@@ -39,13 +40,13 @@ namespace Application.Services
 
             if(user == null)
             {
-                await _orderService.FailPaymentAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
                 return Result<PaymentFromBalanceResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
             }
               
             if (user.Balance < order.TotalPrice)
             {
-                await _orderService.FailPaymentAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
                 return Result<PaymentFromBalanceResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
             }
                 
@@ -53,8 +54,8 @@ namespace Application.Services
 
             user.Balance -= order.TotalPrice;
 
-            var payment = new Payment(order.Id, null, order.TotalPrice, Payment.PaymentMethod.Balance);
-            _context.Payments.Add(payment);
+            var moneyTransaction = new Transaction(order.Id, null, order.TotalPrice, Transaction.PaymentMethod.Balance);
+            _context.Transactions.Add(moneyTransaction);
 
             var globalPayments = await _context.OrderItems
                 .Where(x => x.OrderId == OrderId)
@@ -79,8 +80,8 @@ namespace Application.Services
 
             if (globalPayments.Count != sellers.Count)
             {
-                await _orderService.FailPaymentAsync(OrderId);
-                payment.Status = Payment.PaymentStatus.Failed;
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                moneyTransaction.Status = Transaction.PaymentStatus.Failed;
                 return Result<PaymentFromBalanceResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
             }
                 
@@ -89,12 +90,81 @@ namespace Application.Services
                 seller.Balance += globalPayments[seller.Id];
             }
 
-            await _orderService.ConfirmPaymentAsync(OrderId);
-            payment.Status = Payment.PaymentStatus.Success;
+            await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+            moneyTransaction.Status = Transaction.PaymentStatus.Success;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             
             return Result<PaymentFromBalanceResponseDTO>.Success(new PaymentFromBalanceResponseDTO(OrderId, "OK"));
+        }
+
+        public async Task<Result<PaymentYOOKassaResponseDTO>> PayFromYOOKassaAsync(Ulid UserId, Ulid OrderId)
+        {
+            var order = await _context.Orders
+                .FindAsync(OrderId);
+
+            if (order == null)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentYOOKassaResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
+            }
+
+            if (order.UserId != UserId)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentYOOKassaResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
+            }
+
+            var user = await _context.Users
+                .FindAsync(UserId);
+
+            if (user == null)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentYOOKassaResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+            }
+
+            if (user.Balance < order.TotalPrice)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentYOOKassaResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
+            }
+
+            var client = new Client(shopId: $"{Environment.GetEnvironmentVariable("YOOKASSA_SHOP_ID")}", secretKey: $"{Environment.GetEnvironmentVariable("YOOKASSA_API_KEY")}");
+            var asyncClient = client.MakeAsync();
+
+            var newPayment = new NewPayment
+            {
+                Amount = new Amount
+                {
+                    Value = order.TotalPrice,
+                    Currency = "RUB" // fix later
+                },
+                Capture = true,
+                Confirmation = new Confirmation
+                {
+                    Type = ConfirmationType.Redirect,
+                    ReturnUrl = $"{Environment.GetEnvironmentVariable("YOOKASSA_BACK_URL")}"
+                },
+                Description = $"Payment №{order.Id}"
+            };
+
+            var moneyTransaction = new Transaction(OrderId, null, order.TotalPrice, Transaction.PaymentMethod.YOOKassa);
+
+            try
+            {
+                var response = await asyncClient.CreatePaymentAsync(newPayment);
+
+                string paymentUrl = newPayment.Confirmation.ConfirmationUrl;
+                moneyTransaction.ExternalPaymentId = response.Id;
+
+                await _context.SaveChangesAsync();
+                return Result<PaymentYOOKassaResponseDTO>.Success(new PaymentYOOKassaResponseDTO(response.Id, paymentUrl));
+            }
+            catch (Exception ex)
+            {             
+                return Result<PaymentYOOKassaResponseDTO>.Error("Что-то пошло не так", ErrorType.Conflict); // fix later
+            }
         }
     }
 }

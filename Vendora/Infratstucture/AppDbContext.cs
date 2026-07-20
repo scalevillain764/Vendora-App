@@ -1,7 +1,7 @@
 ﻿using Domain.CartItems;
 using Domain.Carts;
 using Domain.Products;
-using Domain.Payments;
+using Domain.Transactions;
 using Domain.Stores;
 using Domain.Users;
 using Domain.OrderItems;
@@ -19,7 +19,7 @@ namespace Infrastructure.AppDbContexts
         public DbSet <OrderItem> OrderItems { get; set; }
         public DbSet <Cart> Carts { get; set; }
         public DbSet <CartItem> CartItems { get; set; }
-        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
         
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -73,9 +73,9 @@ namespace Infrastructure.AppDbContexts
                 .HasIdentityOptions(startValue: 10000000);
 
             // payment
-            modelBuilder.Entity<Payment>()
+            modelBuilder.Entity<Transaction>()
                 .HasOne(p => p.Order)
-                .WithMany(o => o.Payments)
+                .WithMany(o => o.Transactions)
                 .HasForeignKey(p => p.OrderId);
         }
     }
