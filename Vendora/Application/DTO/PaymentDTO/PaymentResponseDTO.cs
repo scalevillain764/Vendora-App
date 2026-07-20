@@ -1,6 +1,6 @@
 ﻿namespace Application.DTO.PaymentDTO
 {
-    public record PaymentFromBalanceResponseDTO(
+    public record PaymentResponseDTO(
         Ulid OrderId,
         string PaymentStatus
     );

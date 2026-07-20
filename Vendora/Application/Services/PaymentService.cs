@@ -1,7 +1,9 @@
 ﻿using Application.DTO.PaymentDTO;
 using Application.Result;
 using Domain.ErrorTypes;
+using Domain.Orders;
 using Domain.Transactions;
+using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
 using Yandex.Checkout.V3;
@@ -18,47 +20,12 @@ namespace Application.Services
             _orderService = orderService;
             _context = context;
         }
-        public async Task<Result<PaymentFromBalanceResponseDTO>> PayFromBalanceAsync(Ulid UserId, Ulid OrderId)
+        private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction)
         {
-            var order = await _context.Orders
-                .FindAsync(OrderId);
-
-            if (order == null)
-            {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
-                return Result<PaymentFromBalanceResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
-            }
-                
-            if(order.UserId != UserId)
-            {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
-                return Result<PaymentFromBalanceResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
-            }
-                
-            var user = await _context.Users
-                .FindAsync(UserId);
-
-            if(user == null)
-            {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
-                return Result<PaymentFromBalanceResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
-            }
-              
-            if (user.Balance < order.TotalPrice)
-            {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
-                return Result<PaymentFromBalanceResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
-            }
-                
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
             user.Balance -= order.TotalPrice;
 
-            var moneyTransaction = new Transaction(order.Id, null, order.TotalPrice, Transaction.PaymentMethod.Balance);
-            _context.Transactions.Add(moneyTransaction);
-
             var globalPayments = await _context.OrderItems
-                .Where(x => x.OrderId == OrderId)
+                .Where(x => x.OrderId == order.Id)
                     .Select(x => new
                     {
                         SellerId = x.SellerId,
@@ -66,8 +33,8 @@ namespace Application.Services
                     })
                    .GroupBy(p => p.SellerId)
                         .ToDictionaryAsync(
-                        group => group.Key,               
-                        group => group.Sum(x => x.Sum)    
+                        group => group.Key,
+                        group => group.Sum(x => x.Sum)
                         );
 
             var sellersId = globalPayments
@@ -80,22 +47,95 @@ namespace Application.Services
 
             if (globalPayments.Count != sellers.Count)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(order.Id);
                 moneyTransaction.Status = Transaction.PaymentStatus.Failed;
-                return Result<PaymentFromBalanceResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+                return false;
             }
-                
-            foreach(var seller in sellers)
+
+            foreach (var seller in sellers)
             {
                 seller.Balance += globalPayments[seller.Id];
             }
 
-            await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+            await _orderService.ChangeOrderStatusToSuccessAsync(order.Id);
             moneyTransaction.Status = Transaction.PaymentStatus.Success;
+
+            return true;
+        }
+
+        public async Task<Result<PaymentResponseDTO>> ConfirmYooKassaPaymentAsync(Ulid UserId, PaymentYooKassaRequestDTO DTO)
+        {
+            var moneyTransaction = await _context.Transactions
+                .Include(x => x.Order)
+                    .FirstOrDefaultAsync(x => x.ExternalPaymentId == DTO.obj.Id);
+
+            if (moneyTransaction == null)
+                return Result<PaymentResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
+
+            var user = await _context.Users
+                .FindAsync(UserId);
+
+            if (user == null)
+                return Result<PaymentResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+           
+            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction);
+
+            if(!rez)
+                return Result<PaymentResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return Result<PaymentResponseDTO>.Success(new PaymentResponseDTO(moneyTransaction.OrderId, "OK"));
+        }
+
+        public async Task<Result<PaymentResponseDTO>> PayFromBalanceAsync(Ulid UserId, Ulid OrderId)
+        {
+            var order = await _context.Orders
+                .FindAsync(OrderId);
+
+            if (order == null)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
+            }
+                
+            if(order.UserId != UserId)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
+            }
+                
+            var user = await _context.Users
+                .FindAsync(UserId);
+
+            if(user == null)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+            }
+              
+            if (user.Balance < order.TotalPrice)
+            {
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                return Result<PaymentResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
+            }
+
+            var moneyTransaction = new Transaction(order.Id, null, order.TotalPrice, Transaction.PaymentMethod.Balance);
+            _context.Transactions.Add(moneyTransaction);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction);
+
+            if(!rez)
+                return Result<PaymentResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             
-            return Result<PaymentFromBalanceResponseDTO>.Success(new PaymentFromBalanceResponseDTO(OrderId, "OK"));
+            return Result<PaymentResponseDTO>.Success(new PaymentResponseDTO(OrderId, "OK"));
         }
 
         public async Task<Result<PaymentYOOKassaResponseDTO>> PayFromYOOKassaAsync(Ulid UserId, Ulid OrderId)
@@ -124,12 +164,6 @@ namespace Application.Services
                 return Result<PaymentYOOKassaResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
             }
 
-            if (user.Balance < order.TotalPrice)
-            {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
-                return Result<PaymentYOOKassaResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
-            }
-
             var client = new Client(shopId: $"{Environment.GetEnvironmentVariable("YOOKASSA_SHOP_ID")}", secretKey: $"{Environment.GetEnvironmentVariable("YOOKASSA_API_KEY")}");
             var asyncClient = client.MakeAsync();
 
@@ -150,11 +184,12 @@ namespace Application.Services
             };
 
             var moneyTransaction = new Transaction(OrderId, null, order.TotalPrice, Transaction.PaymentMethod.YOOKassa);
+            _context.Transactions.Add(moneyTransaction);
 
             try
             {
                 var response = await asyncClient.CreatePaymentAsync(newPayment);
-
+                
                 string paymentUrl = newPayment.Confirmation.ConfirmationUrl;
                 moneyTransaction.ExternalPaymentId = response.Id;
 
