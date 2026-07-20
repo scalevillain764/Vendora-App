@@ -22,7 +22,6 @@ namespace Domain.Payments
         {
             Id = Ulid.NewUlid();
             OrderId = orderId;
-            Order = order;
             ExternalPaymentId = externalPaymentId;
             Amount = amount;
             Method = method;
