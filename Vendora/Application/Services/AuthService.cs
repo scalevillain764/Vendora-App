@@ -14,12 +14,10 @@ namespace Application.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext _context;
-        public AuthService(IConfiguration configuration, IHttpContextAccessor accessor, AppDbContext context)
+        public AuthService(IHttpContextAccessor accessor, AppDbContext context)
         {
-            _configuration = configuration;
             _httpContextAccessor = accessor;
             _context = context;
         }
@@ -97,7 +95,7 @@ namespace Application.Services
                 new Claim(ClaimTypes.Name, UserName)
             };
 
-            string decoded_key = _configuration["secret_key"];
+            string decoded_key = Environment.GetEnvironmentVariable("SECRET_KEY");
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(decoded_key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 

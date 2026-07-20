@@ -3,14 +3,15 @@ using Application.Result;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
 using Domain.ErrorTypes;
+using IOrderService = Application.Interfaces.IOrderService;
 using IPaymentService = Application.Interfaces.IPaymentService;
 namespace Application.Services
 {
     public class PaymentService : IPaymentService
     {
         private readonly AppDbContext _context;
-        private readonly OrderService _orderService;
-        public PaymentService(AppDbContext context, OrderService orderService)
+        private readonly IOrderService _orderService;
+        public PaymentService(AppDbContext context, IOrderService orderService)
         {
             _orderService = orderService;
             _context = context;
