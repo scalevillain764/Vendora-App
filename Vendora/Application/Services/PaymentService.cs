@@ -93,9 +93,8 @@ namespace Application.Services
             payment.Status = Payment.PaymentStatus.Success;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-
+            
             return Result<PaymentFromBalanceResponseDTO>.Success(new PaymentFromBalanceResponseDTO(OrderId, "OK"));
         }
-        P
     }
 }
