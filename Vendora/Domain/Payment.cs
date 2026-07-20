@@ -18,7 +18,7 @@ namespace Domain.Payments
         public enum PaymentStatus {Pending = 1, Success = 2, Failed = 3};
         public PaymentStatus Status { get; set; }
 
-        public Payment(Ulid orderId, Order order, string? externalPaymentId, decimal amount, PaymentMethod method)
+        public Payment(Ulid orderId, string? externalPaymentId, decimal amount, PaymentMethod method)
         {
             Id = Ulid.NewUlid();
             OrderId = orderId;
