@@ -1,0 +1,32 @@
+﻿using Domain.Orders;
+namespace Domain.Payments
+{
+    public class Payment
+    {
+        public Ulid Id { get; set; }
+        
+        // references
+        public Ulid OrderId { get; set; }
+        public Order Order { get; set; } = null!;
+
+        public string? ExternalPaymentId { get; set; }
+        public decimal Amount { get; set; }
+
+        public enum PaymentMethod { Balance = 1, YOOKassa = 2 };
+        public PaymentMethod Method { get; set; }
+
+        public enum PaymentStatus {Pending = 1, Success = 2, Failed = 3};
+        public PaymentStatus Status { get; set; }
+
+        public Payment(Ulid orderId, Order order, string? externalPaymentId, decimal amount, PaymentMethod method, PaymentStatus status)
+        {
+            Id = Ulid.NewUlid();
+            OrderId = orderId;
+            Order = order;
+            ExternalPaymentId = externalPaymentId;
+            Amount = amount;
+            Method = method;
+            Status = status;
+        }
+    }
+}

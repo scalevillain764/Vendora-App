@@ -36,6 +36,7 @@ namespace Application.Services
 
             _context.Users.Add(user);
 
+
             await _context.SaveChangesAsync();
             return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));
         }
