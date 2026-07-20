@@ -87,10 +87,10 @@ namespace Application.Services
             return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOS));
         }
 
-        public Task<Result<OrderResponseDTO>> ConfirmPaymentAsync(Ulid orderId)
+        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccess(Ulid orderId)
             => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentCompleted);
 
-        public Task<Result<OrderResponseDTO>> FailPaymentAsync(Ulid orderId)
+        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToFail(Ulid orderId)
               => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentFailed);
     }
 }
