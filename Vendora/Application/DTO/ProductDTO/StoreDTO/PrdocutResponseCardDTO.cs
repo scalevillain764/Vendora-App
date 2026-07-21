@@ -1,14 +1,15 @@
 ﻿using Domain.Products;
 namespace Application.DTO.ProductDTO.StoreDTO
 {
-    public record ProductCardDTO (
-        string StoreName,   
+    public record ProductCardDTO(
+        string StoreName,
         string Name,
         decimal Price,
-        string? PreviewUrl
+        string? PreviewUrl,
+        bool IsFavourite
     )
     {
-        public ProductCardDTO(Product product) : 
-            this(product.Store.Name, product.Name, product.Price, product.PreviewUrl) { }
+        public ProductCardDTO(Product product, bool isFavourite) : 
+            this(product.Store.Name, product.Name, product.Price, product.PreviewUrl, isFavourite) { }
     }
 }
