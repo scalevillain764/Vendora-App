@@ -16,7 +16,7 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<FavoriteResponseDTO>> AddToFavourite(Ulid UserId, Ulid ProductId)
+        public async Task<Result<FavoriteResponseDTO>> AddToFavouriteAsync(Ulid UserId, Ulid ProductId)
         {
             bool userExists = await _context.Users
                 .AnyAsync(x => x.Id == UserId);
@@ -38,7 +38,7 @@ namespace Application.Services
             return Result<FavoriteResponseDTO>.Success(new FavoriteResponseDTO(ProductId, true));
         }
 
-        public async Task<Result<FavoriteResponseDTO>> RemoveFromFavourite(Ulid UserId, Ulid ProductId)
+        public async Task<Result<FavoriteResponseDTO>> RemoveFromFavouriteAsync(Ulid UserId, Ulid ProductId)
         {
             bool userExists = await _context.Users
                 .AnyAsync(x => x.Id == UserId);
@@ -63,6 +63,29 @@ namespace Application.Services
             await _context.SaveChangesAsync();
 
             return Result<FavoriteResponseDTO>.Success(new FavoriteResponseDTO(ProductId, false));
+        }
+
+        public async Task<Result<List<ProductCardDTO>>> GetFavouritesByIdAsync(Ulid UserId)
+        {
+            bool userExists = await _context.Users
+                .AnyAsync(x => x.Id == UserId);
+
+            if (!userExists)
+                return Result<List<ProductCardDTO>>.Error("Пользователь не найден", ErrorType.Forbidden);
+
+            bool hasFilms = await _context.Favourites
+                .AnyAsync(x => x.UserId == UserId);
+
+            if(!hasFilms)
+                return Result<List<ProductCardDTO>>.Error("Нет избранных товаров", ErrorType.Validation);
+
+            var rez = await _context.Favourites
+                .Where(x => x.UserId == x.UserId)
+                    .Include(x => x.Product)
+                        .Select(x => new ProductCardDTO(x.Product, true))
+                .ToListAsync();
+
+            return Result<List<ProductCardDTO>>.Success(rez);
         }
     }
 }
