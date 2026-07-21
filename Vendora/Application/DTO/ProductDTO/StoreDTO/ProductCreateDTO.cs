@@ -5,6 +5,7 @@
          int Category,
          string Name,
          string? Description,
+         string? ShortDescription,
          decimal Price,
          int Quantity,
          string? PreviewUrl

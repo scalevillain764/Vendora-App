@@ -47,7 +47,9 @@ namespace Application.Services
             if (storeId == default)
                 return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden);
 
-            var newProduct = new Product(storeId, DTO.Category, DTO.Name, DTO.Description, DTO.Price, DTO.Quantity, DTO.PreviewUrl);
+            var newProduct = new Product
+                (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
+                DTO.Quantity, DTO.PreviewUrl);
 
             _context.Products.Add(newProduct);
             await _context.SaveChangesAsync(); 
@@ -104,5 +106,8 @@ namespace Application.Services
 
         public Task<Result<ProductResponseDTO>> ChangeProductPriceAsync(Ulid UserId, Ulid ProductId, ProductChangePriceDTO DTO)
             => ChangeProductProperty(UserId, ProductId, x => x.Price = DTO.Price);
+
+        public Task<Result<ProductResponseDTO>> ChangeProductShortDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeShortDescriptionDTO DTO)
+           => ChangeProductProperty(UserId, ProductId, x => x.ShortDescription = DTO.shortDescription);
     }
 }

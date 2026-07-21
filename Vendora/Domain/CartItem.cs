@@ -17,12 +17,12 @@ namespace Domain.CartItems
         public int Quantity { get; set; }
         public decimal PricePerUnit { get; set; }
 
-        public CartItem (Ulid cartId, Ulid productId, int quantity, decimal pricePerUnit)
+        public CartItem (Ulid cartId, Ulid productId, decimal pricePerUnit)
         {
             Id = Ulid.NewUlid();
             CartId = cartId;
             ProductId = productId;
-            Quantity = quantity;
+            Quantity = 1;
             PricePerUnit = pricePerUnit;
         }
     }

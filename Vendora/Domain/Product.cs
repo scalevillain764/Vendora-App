@@ -111,6 +111,7 @@ namespace Domain.Products
         public ProductCategory Category { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
+        public string? ShortDescription { get; set; }
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public long Article { get; set; }
@@ -119,7 +120,7 @@ namespace Domain.Products
         public string? PreviewUrl { get; set; }
         public bool IsDeleted { get; set; }
         public Product(Ulid storeId, int categoryId, 
-            string name, string? description, 
+            string name, string? description, string? shortDescription,
             decimal price, int quantity,
             string? previewUrl)
         {
@@ -127,6 +128,7 @@ namespace Domain.Products
             StoreId = storeId;
             Category = (ProductCategory)categoryId;
             Name = name;
+            ShortDescription = shortDescription;
             Description = description;
             Price = price;
             Quantity = quantity;
