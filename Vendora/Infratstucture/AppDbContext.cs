@@ -6,6 +6,7 @@ using Domain.Stores;
 using Domain.Users;
 using Domain.OrderItems;
 using Domain.Orders;
+using Domain.Favourites;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
 namespace Infrastructure.AppDbContexts
@@ -21,6 +22,7 @@ namespace Infrastructure.AppDbContexts
         public DbSet <CartItem> CartItems { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         
+        public DbSet<Favourite> Favourites { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -77,6 +79,11 @@ namespace Infrastructure.AppDbContexts
                 .HasOne(p => p.Order)
                 .WithMany(o => o.Transactions)
                 .HasForeignKey(p => p.OrderId);
+
+            // favourite
+            modelBuilder.Entity<Favourite>()
+                .HasKey(x => new { x.UserId, x.ProductId });
+
         }
     }
 }
