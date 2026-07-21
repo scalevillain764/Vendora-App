@@ -190,11 +190,11 @@ namespace Application.Services
             {
                 var response = await asyncClient.CreatePaymentAsync(newPayment);
                 
-                string paymentUrl = newPayment.Confirmation.ConfirmationUrl;
+                string paymentUrl = response.Confirmation.ConfirmationUrl;
                 moneyTransaction.ExternalPaymentId = response.Id;
 
                 await _context.SaveChangesAsync();
-                return Result<PaymentYOOKassaResponseDTO>.Success(new PaymentYOOKassaResponseDTO(response.Id, paymentUrl));
+                return Result<PaymentYOOKassaResponseDTO>.Success(new PaymentYOOKassaResponseDTO(order.Id, response.Id, paymentUrl));
             }
             catch (Exception ex)
             {             
