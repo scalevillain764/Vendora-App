@@ -64,7 +64,7 @@ namespace Application.Services
             var newOrder = new Order(UserId, totalPrice);
 
             var orderItems = cart.Items
-                .Select(x => new OrderItem(newOrder, x, x.Product.Store.SellerId))
+                .Select(x => new OrderItem(newOrder.Id, x, x.Product.Store.SellerId))
                 .ToList();
 
             newOrder.Items = orderItems;

@@ -24,11 +24,11 @@ namespace Domain.OrderItems
         public decimal PricePerUnit { get; set; }
         public int Quantity { get; set; }
 
-        public OrderItem(Order order, CartItem item, Ulid sellerId)
+        public OrderItem(Ulid orderId, CartItem item, Ulid sellerId)
         {
             Id = Ulid.NewUlid();
             SellerId = sellerId;
-            OrderId = order.Id;
+            OrderId = orderId;
             ProductId = item.ProductId;
             ProductName = item.Product.Name;
             PricePerUnit = item.PricePerUnit;
