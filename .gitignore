@@ -141,3 +141,8 @@ $RECYCLE.BIN/
 *.txt
 
 _NCrunch*
+
+# Env files
+.env
+.env.*
+!.env.example
