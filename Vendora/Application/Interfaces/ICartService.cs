@@ -7,6 +7,6 @@ namespace Application.Interfaces
         Task<Result<List<ProductCartCardResponseDTO>>> GetMyCartAsync(Ulid UserId);
         Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId);
         Task<Result<ProductCartCardResponseDTO>> DencreaseQuantityAsync(Ulid UserId, Ulid CartItemId);
-        Task<Result<ProductCartCardResponseDTO>> DencreaseQuantityAsync(Ulid UserId, Ulid CartItemId);
+        Task<Result<RemoveCartItemResponseDTO>> RemoveCartItemAsync(Ulid UserId, Ulid CartItemId);
     }
 }
