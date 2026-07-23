@@ -23,8 +23,8 @@ namespace Domain.OrderItems
         public string ProductName { get; set; }
         public decimal PricePerUnit { get; set; }
         public int Quantity { get; set; }
-
-        public OrderItem(Ulid orderId, CartItem item, Ulid sellerId)
+        private OrderItem() { }
+        internal OrderItem(Ulid orderId, CartItem item, Ulid sellerId)
         {
             Id = Ulid.NewUlid();
             SellerId = sellerId;

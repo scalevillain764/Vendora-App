@@ -24,6 +24,13 @@ namespace Infrastructure.AppDbContexts
         
         public DbSet<Favourite> Favourites { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Properties<Ulid>()
+                .HaveConversion<Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Ulid, string>>()
+                .HaveMaxLength(26)
+                .AreFixedLength();
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // user
@@ -83,6 +90,20 @@ namespace Infrastructure.AppDbContexts
             // favourite
             modelBuilder.Entity<Favourite>()
                 .HasKey(x => new { x.UserId, x.ProductId });
+
+            // remove auto-increment
+            foreach(var dbSet in modelBuilder.Model.GetEntityTypes())
+            {
+                var primary_key = dbSet.FindPrimaryKey();
+                if(primary_key != null)
+                {
+                    foreach(var property in primary_key.Properties)
+                    {
+                        if(property.ClrType == typeof(Ulid))
+                            property.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
+                    }
+                }
+            }
 
         }
     }

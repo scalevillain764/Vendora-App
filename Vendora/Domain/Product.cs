@@ -119,7 +119,8 @@ namespace Domain.Products
         // preview
         public string? PreviewUrl { get; set; }
         public bool IsDeleted { get; set; }
-        public Product(Ulid storeId, int categoryId, 
+        private Product() { }
+        internal Product(Ulid storeId, int categoryId, 
             string name, string? description, string? shortDescription,
             decimal price, int quantity,
             string? previewUrl)
