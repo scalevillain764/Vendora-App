@@ -7,6 +7,7 @@ using Domain.Users;
 using Domain.OrderItems;
 using Domain.Orders;
 using Domain.Favourites;
+using Infrastructure.UlidToStringConverters;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
 namespace Infrastructure.AppDbContexts
@@ -27,7 +28,7 @@ namespace Infrastructure.AppDbContexts
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             configurationBuilder.Properties<Ulid>()
-                .HaveConversion<Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Ulid, string>>()
+                .HaveConversion<UlidToStringConverter>()
                 .HaveMaxLength(26)
                 .AreFixedLength();
         }
@@ -104,7 +105,6 @@ namespace Infrastructure.AppDbContexts
                     }
                 }
             }
-
         }
     }
 }
