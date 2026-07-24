@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Application.DTO.ProductDTO.CartDTO;
+using Domain.Products;
+using Microsoft.AspNetCore.Mvc;
 using ICartService = Application.Interfaces.ICartService;
-using Application.DTO.ProductDTO.CartDTO;
 namespace Presentation.Controllers
 {
     [ApiController]
@@ -15,37 +16,26 @@ namespace Presentation.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetMyCartAsync()
-        {
-            var ULID_userId = GetUserId();
-            var rez = await _cartService.GetMyCartAsync(ULID_userId);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _cartService.GetMyCartAsync(CurrentUserId));
+
+        [HttpPost]
+        [Route("product/{productId}")]
+        public async Task<IActionResult> AddProductToCartAsync(Ulid productId)
+            => ProcessResult(await _cartService.AddProductToCartAsync(CurrentUserId, productId));
 
         [HttpPost]
         [Route("items/{cartItemId}/increase")]
         public async Task<IActionResult> IncreaseQuantityAsync(Ulid cartItemId)
-        {    
-            var ULID_userId = GetUserId();
-            var rez = await _cartService.IncreaseQuantityAsync(ULID_userId, cartItemId);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _cartService.IncreaseQuantityAsync(CurrentUserId, cartItemId));
 
         [HttpPost]
-        [Route("items/{cartItemId}/dencrease")]
+        [Route("items/{cartItemId}/decrease")]
         public async Task<IActionResult> DecreaseQuantityAsync(Ulid cartItemId)
-        {
-            var ULID_userId = GetUserId();
-            var rez = await _cartService.DecreaseQuantityAsync(ULID_userId, cartItemId);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _cartService.DecreaseQuantityAsync(CurrentUserId, cartItemId));
 
         [HttpDelete]
         [Route("items/{cartItemId}")]
         public async Task<IActionResult> RemoveCartItemAsync(Ulid cartItemId)
-        {
-            var ULID_userId = GetUserId();
-            var rez = await _cartService.RemoveCartItemAsync(ULID_userId, cartItemId);
-            return ProcessResult(rez);
-        }
+           => ProcessResult(await _cartService.RemoveCartItemAsync(CurrentUserId, cartItemId)); 
     }
 }

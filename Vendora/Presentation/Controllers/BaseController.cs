@@ -7,6 +7,10 @@ namespace Presentation.Controllers
     [ApiController]
     public class BaseController: ControllerBase
     {
+        protected Ulid CurrentUserId => ExtractUserIdFromClaims();
+        private Ulid ExtractUserIdFromClaims()
+            => Ulid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) 
+            ? userId : throw new UnauthorizedAccessException();
         protected IActionResult ProcessResult<T> (Result<T> rez) where T : class
         {
             if(!rez.IsSuccess)
@@ -22,7 +26,5 @@ namespace Presentation.Controllers
             }
             return Ok(rez.data);
         }
-        protected Ulid GetUserId() => (Ulid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : throw new UnauthorizedAccessException());
-        protected Ulid ConvertStringToUlid(string value) => (Ulid.TryParse(value, out var valueUlid) ? valueUlid : throw new FormatException());
     }
 }
