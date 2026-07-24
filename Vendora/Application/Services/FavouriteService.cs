@@ -1,6 +1,5 @@
 ﻿using Application.Result;
 using Application.DTO.FavouriteDTO;
-using Application.DTO.ProductDTO;
 using Application.DTO.ProductDTO.StoreDTO;
 using Domain.ErrorTypes;
 using Infrastructure.AppDbContexts;

@@ -1,11 +1,13 @@
 ﻿using Application.DTO.ProductDTO.CartDTO;
 using Domain.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ICartService = Application.Interfaces.ICartService;
 namespace Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CartController : BaseController
     {
         private readonly ICartService _cartService;
