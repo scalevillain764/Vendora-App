@@ -1,4 +1,5 @@
-﻿using Application.DTO.ProductDTO.CartDTO;
+﻿using Application.DTO.CartDTO;
+using Application.DTO.ProductDTO.CartDTO;
 using Application.Result;
 using Domain.CartItems;
 using Domain.ErrorTypes;
@@ -32,7 +33,7 @@ namespace Application.Services
 
             return Result<CartItem>.Success(cartItem);
         }
-        public async Task<Result<List<ProductCartCardResponseDTO>>> GetMyCartAsync(Ulid UserId)
+        public async Task<Result<CartResponseDTO>> GetMyCartAsync(Ulid UserId)
         {
             var cart = await _context.Carts
                 .Include(x => x.Items)
@@ -41,43 +42,43 @@ namespace Application.Services
                 .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if (cart == null)
-                return Result<List<ProductCartCardResponseDTO>>.Error("Корзина не создана", ErrorType.NotFound);
+                return Result<CartResponseDTO>.Error("Корзина не создана", ErrorType.NotFound);
 
-            var rez = cart.Items
-                .Select(x => new ProductCartCardResponseDTO(x))
-                .ToList();
-
-            return Result<List<ProductCartCardResponseDTO>>.Success(rez);
+            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
 
-        public async Task<Result<RemoveCartItemResponseDTO>> RemoveCartItemAsync(Ulid UserId, Ulid CartItemId)
+        public async Task<Result<CartResponseDTO>> RemoveCartItemAsync(Ulid UserId, Ulid CartItemId)
         {
             var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
 
             if (!cartItemResult.IsSuccess)
-                return Result<RemoveCartItemResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
+                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
             var cartItem = cartItemResult.data;
-            if (cartItem == null)
-                return Result<RemoveCartItemResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+            var cart = cartItem.Cart;
+
+            if (cartItem == null || cart == null)
+                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
             _context.CartItems.Remove(cartItem);
 
             await _context.SaveChangesAsync();
 
-            return Result<RemoveCartItemResponseDTO>.Success(new RemoveCartItemResponseDTO(CartItemId));
+            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
 
-        public async Task<Result<ProductCartCardResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
+        public async Task<Result<CartResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
         {
             var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
 
             if (!cartItemResult.IsSuccess)
-                return Result<ProductCartCardResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
+                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
             var cartItem = cartItemResult.data;
-            if (cartItem == null)
-                return Result<ProductCartCardResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+            var cart = cartItem.Cart;
+
+            if (cartItem == null || cart == null)
+                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
             if (cartItem.Quantity > 1)
             {
@@ -85,19 +86,21 @@ namespace Application.Services
                 await _context.SaveChangesAsync();
             }
 
-            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItem));
+            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
 
-        public async Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
+        public async Task<Result<CartResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
         {
             var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
 
             if (!cartItemResult.IsSuccess)
-                return Result<ProductCartCardResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
+                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
             var cartItem = cartItemResult.data;
-            if (cartItem == null)
-                return Result<ProductCartCardResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+            var cart = cartItem.Cart;
+
+            if (cartItem == null || cart == null)
+                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
             if (cartItem.Product.Quantity > cartItem.Quantity)
             {
@@ -105,7 +108,7 @@ namespace Application.Services
                 await _context.SaveChangesAsync();
             }
 
-            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItem));
+            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
     }
 }
