@@ -9,5 +9,6 @@ namespace Application.Interfaces
         Task<Result<CartResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId);
         Task<Result<CartResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid CartItemId);
         Task<Result<CartResponseDTO>> RemoveCartItemAsync(Ulid UserId, Ulid CartItemId);
+        Task<Result<CartResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId);
     }
 }

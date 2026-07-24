@@ -110,5 +110,37 @@ namespace Application.Services
 
             return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
+
+        public async Task<Result<CartResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId)
+        {
+            var cart = await _context.Carts
+                .Include(x => x.Items)
+                    .ThenInclude(c => c.Product)
+                .FirstOrDefaultAsync(x => x.UserId == UserId);
+
+            if(cart == null)
+                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
+            var product = await _context.Products
+                .FindAsync(ProductId);
+
+            if(product == null)
+                return Result<CartResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+
+            if(cart.Items.Any(x => x.ProductId == product.Id))
+                return Result<CartResponseDTO>.Error("Товар уже добавлен в корзину", ErrorType.Conflict);
+
+            if (product.Quantity == 0)
+                return Result<CartResponseDTO>.Error("Товара нет в наличии", ErrorType.Conflict);
+
+            cart.Items.Add(new CartItem(cart.Id, ProductId, product.Price)
+            {
+                Product = product 
+            });
+          
+            await _context.SaveChangesAsync();
+
+            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
+        }
     }
 }
