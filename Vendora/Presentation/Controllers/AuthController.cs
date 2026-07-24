@@ -16,26 +16,16 @@ namespace Presentation.Controllers
         [HttpPost]
         [Route("registration")]
         public async Task<IActionResult> ResgistrateAsync([FromBody] UserRegistrationDTO DTO)
-        {
-            var rez = await _authService.RegistrAsync(DTO);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _authService.RegistrAsync(DTO));
 
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> LogInAsync([FromBody] UserLogInDTO DTO)
-        {
-            var rez = await _authService.LogInAsync(DTO);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _authService.LogInAsync(DTO));
 
         [HttpGet]
         [Route("refresh")]
         public async Task<IActionResult> RefreshAsync()
-        {
-            var ULID_userId = GetUserId();
-            var rez = await _authService.RefreshAsync(ULID_userId);
-            return ProcessResult(rez);
-        }
+            => ProcessResult(await _authService.RefreshAsync(CurrentUserId));
     }
 }
