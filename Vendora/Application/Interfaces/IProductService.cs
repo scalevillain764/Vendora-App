@@ -7,7 +7,7 @@ namespace Application.Interfaces
     {
         Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO);
         Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId);
-        Task<Result<ProductResponseDTO>>  ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO);
+        Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductCategoryAsync(Ulid UserId, Ulid ProductId, ProductChangeCategoryDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductQuantityAsync(Ulid UserId, Ulid ProductId, ProductChangeQuantityDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeDescriptionDTO DTO);
