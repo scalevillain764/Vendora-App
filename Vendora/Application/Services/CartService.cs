@@ -57,7 +57,11 @@ namespace Application.Services
             if (!cartItemResult.IsSuccess)
                 return Result<RemoveCartItemResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
-            _context.CartItems.Remove(cartItemResult.data);
+            var cartItem = cartItemResult.data;
+            if (cartItem == null)
+                return Result<RemoveCartItemResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
+            _context.CartItems.Remove(cartItem);
 
             await _context.SaveChangesAsync();
 
@@ -71,12 +75,17 @@ namespace Application.Services
             if (!cartItemResult.IsSuccess)
                 return Result<ProductCartCardResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
-            if (cartItemResult.data.Quantity > 1)
+            var cartItem = cartItemResult.data;
+            if (cartItem == null)
+                return Result<ProductCartCardResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
+            if (cartItem.Quantity > 1)
             {
-                cartItemResult.data.Quantity--;
+                cartItem.Quantity--;
                 await _context.SaveChangesAsync();
             }
-            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItemResult.data));
+
+            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItem));
         }
 
         public async Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
@@ -86,13 +95,17 @@ namespace Application.Services
             if (!cartItemResult.IsSuccess)
                 return Result<ProductCartCardResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
 
-            if (cartItemResult.data.Product.Quantity > cartItemResult.data.Quantity)
+            var cartItem = cartItemResult.data;
+            if (cartItem == null)
+                return Result<ProductCartCardResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
+
+            if (cartItem.Product.Quantity > cartItem.Quantity)
             {
-                cartItemResult.data.Quantity++;
+                cartItem.Quantity++;
                 await _context.SaveChangesAsync();
             }
 
-            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItemResult.data));
+            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(cartItem));
         }
     }
 }
