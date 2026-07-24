@@ -33,8 +33,8 @@ namespace Presentation.Controllers
         [Route("refresh")]
         public async Task<IActionResult> RefreshAsync()
         {
-            var userId = GetUserId();
-            var rez = await _authService.RefreshAsync(userId);
+            var ULID_userId = GetUserId();
+            var rez = await _authService.RefreshAsync(ULID_userId);
             return ProcessResult(rez);
         }
     }
