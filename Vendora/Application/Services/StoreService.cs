@@ -16,10 +16,10 @@ namespace Application.Services
         {
             _context = context;
         }
-        private async Task<Result<StoreOwnerResponseDTO>> ChangeStorePropertyAsync(Ulid StoreId, Action<Store> action)
+        private async Task<Result<StoreOwnerResponseDTO>> ChangeStorePropertyAsync(Ulid UserId, Action<Store> action)
         {
             var store = await _context.Stores
-                .FindAsync(StoreId);
+                .FirstOrDefaultAsync(x => x.SellerId == UserId);
 
             if (store == null)
                 return Result<StoreOwnerResponseDTO>.Error("Магази не создан", ErrorType.Forbidden);
