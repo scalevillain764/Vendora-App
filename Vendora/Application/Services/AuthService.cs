@@ -33,9 +33,7 @@ namespace Application.Services
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
 
             var user = new User(DTO.Login, passwordHash);
-
             _context.Users.Add(user);
-
 
             await _context.SaveChangesAsync();
             return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));

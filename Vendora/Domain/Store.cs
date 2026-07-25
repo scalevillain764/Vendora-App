@@ -15,6 +15,7 @@ namespace Domain.Stores
         public string? UrlAvatar { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<Product> Products { get; set; } = new(); // np
+        public bool IsDeleted { get; set; }
 
         public Store(Ulid sellerId, string name, string? description, string? urlAvatar)
         {
@@ -23,6 +24,7 @@ namespace Domain.Stores
             Description = description;
             UrlAvatar = urlAvatar;
             CreatedAt = DateTime.UtcNow;
+            IsDeleted = false;
         }
     }
 }

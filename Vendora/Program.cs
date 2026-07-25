@@ -104,5 +104,3 @@ namespace Vendora
         }
     }
 }
-
-// сделать комит: изменил app db context, orderItem, product. ругается на ulid

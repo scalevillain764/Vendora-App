@@ -35,6 +35,9 @@ namespace Infrastructure.AppDbContexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // user
+            modelBuilder.Entity<User>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
             modelBuilder.Entity<User>() // user with store
                 .HasOne(u => u.Store)
                 .WithOne(s => s.Seller)
@@ -61,7 +64,14 @@ namespace Infrastructure.AppDbContexts
                 .WithMany(p => p.CartItems)
                 .HasForeignKey(ct => ct.ProductId);
 
+            // product
+            modelBuilder.Entity<Product>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
             // store
+            modelBuilder.Entity<Store>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
             modelBuilder.Entity<Store>() // store with products
                 .HasMany(s => s.Products)
                 .WithOne(p => p.Store)

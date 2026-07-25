@@ -30,6 +30,24 @@ namespace Application.Services
 
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
         }
+
+        public async Task<Result<StoreOwnerResponseDTO>> CreateStoreAsync(Ulid UserId, StoreOwnerCreateDTO dto)
+        {
+            bool storeExists = await _context.Stores
+                .AnyAsync(x => x.SellerId == UserId);
+
+            if (storeExists)
+                return Result<StoreOwnerResponseDTO>.Error("У вас уже существует магазин", ErrorType.Forbidden);
+
+            var newStore = new Store(UserId, dto.Name, dto.Description, dto.UrlAvatar);
+
+            _context.Stores.Add(newStore);
+
+            await _context.SaveChangesAsync();
+
+            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(newStore));
+        }
+
         public async Task<Result<StoreOwnerResponseDTO>> GetMyStoreAsync(Ulid UserId)
         {
             var store = await _context.Stores
@@ -39,15 +57,17 @@ namespace Application.Services
                 ? Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store))
                 : Result<StoreOwnerResponseDTO>.Error("Магазин не создан", ErrorType.Forbidden);              
         }
+
         public async Task<Result<StorePublicResponseDTO>> GetStoreAsync(Ulid StoreId)
         {
             var store = await _context.Stores
-                 .FindAsync(StoreId);
+                 .FirstOrDefaultAsync(x => x.Id == StoreId);
 
             return store != null
                 ? Result<StorePublicResponseDTO>.Success(new StorePublicResponseDTO(store))
                 : Result<StorePublicResponseDTO>.Error("Магазин не найдкен", ErrorType.NotFound);
         }
+
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid UserId, StoreChangeNameDTO DTO) 
             => ChangeStorePropertyAsync(UserId, x => x.Name = DTO.Name);
 
