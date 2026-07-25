@@ -34,14 +34,10 @@ namespace Application.Services
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
 
             var user = new User(DTO.Login, passwordHash);
-<<<<<<< HEAD
-            _context.Users.Add(user);
-=======
             var cart = new Cart(user.Id);
 
             _context.Users.Add(user);
             _context.Carts.Add(cart);
->>>>>>> cartService
 
             await _context.SaveChangesAsync();
 
