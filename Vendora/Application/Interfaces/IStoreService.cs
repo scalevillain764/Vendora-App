@@ -9,4 +9,3 @@ namespace Application.Interfaces
         Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid StoreId, StoreChangeNameDTO DTO);
         Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid StoreId, StoreChangeDescriptionDTO DTO);
     }
-}
