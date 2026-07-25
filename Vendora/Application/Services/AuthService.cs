@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using IAuthService = Application.Interfaces.IAuthService;
+using Domain.Carts;
 namespace Application.Services
 {
     public class AuthService : IAuthService
@@ -33,9 +34,17 @@ namespace Application.Services
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
 
             var user = new User(DTO.Login, passwordHash);
+<<<<<<< HEAD
             _context.Users.Add(user);
+=======
+            var cart = new Cart(user.Id);
+
+            _context.Users.Add(user);
+            _context.Carts.Add(cart);
+>>>>>>> cartService
 
             await _context.SaveChangesAsync();
+
             return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));
         }
         public async Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO)
