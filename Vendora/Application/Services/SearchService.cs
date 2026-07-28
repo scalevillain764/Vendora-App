@@ -53,7 +53,7 @@ namespace Application.Services
 
             if (DTO.OnlyInStock != null)
                 products = products
-                    .Where(x => x.Quantity >= 1);
+                    .Where(x => x.Quantity > 0);
 
             var userLikes = _context.Favourites.Where(x => x.UserId == UserId);
 
