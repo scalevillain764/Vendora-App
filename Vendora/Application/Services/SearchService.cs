@@ -55,7 +55,7 @@ namespace Application.Services
                 products = products
                     .Where(x => x.Quantity >= 1);
 
-            var userLikes = _context.Favourites.Where(x => x.UserId == UserId).;
+            var userLikes = _context.Favourites.Where(x => x.UserId == UserId);
 
             var result = await products
                 .GroupJoin (
@@ -68,7 +68,7 @@ namespace Application.Services
                         IsFav = favs.Any()
                     }
                  )
-                .Select(x => new ProductCardDTO(x.Producr, x.IsFav))
+                .Select(x => new ProductCardDTO(x.Product, x.IsFav))
                 .ToListAsync();
 
             return Result<List<ProductCardDTO>>.Success(result);

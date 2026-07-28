@@ -5,6 +5,6 @@ namespace Application.Interfaces
 {
     public interface ISearchService
     {
-        Task<Result<List<ProductCardDTO>>> SearchAsync(SearchRequestDTO DTO);
+        Task<Result<List<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO);
     }
 }
