@@ -1,5 +1,6 @@
 ﻿using Application.DTO.UserDTO;
 using Application.Result;
+using Microsoft.AspNetCore.Http;
 namespace Application.Interfaces
 {
     public interface IUserService
@@ -12,6 +13,6 @@ namespace Application.Interfaces
         Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO);
-        // later add change avatar
+        Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file);
     }
 }

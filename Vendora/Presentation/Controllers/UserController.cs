@@ -55,5 +55,9 @@ namespace Presentation.Controllers
         public async Task<IActionResult> ChangeUserGenderAsync(UserChangeGenderDTO DTO)
             => ProcessResult(await _userService.ChangeUserGenderAsync(CurrentUserId, DTO));
 
+        [HttpPatch]
+        [Route("profilePicture")]
+        public async Task<IActionResult> ChangeUserProfilePictureAsync(IFormFile file)
+            => ProcessResult(await _userService.ChangeUserProfilePictureAsync(CurrentUserId, file));
     }
 }

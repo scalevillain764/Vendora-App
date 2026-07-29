@@ -1,19 +1,24 @@
-﻿
+﻿using Amazon.S3;
+using Amazon.S3.Model;
 using Application.DTO.UserDTO;
 using Application.Result;
-using IUserService = Application.Interfaces.IUserService;
-using Infrastructure.AppDbContexts;
-using Microsoft.EntityFrameworkCore;
 using Domain.ErrorTypes;
 using Domain.Users;
+using Infrastructure.AppDbContexts;
+using Microsoft.EntityFrameworkCore;
+using Yandex.Checkout.V3;
+using IS3Service = Application.Interfaces.IS3Service;
+using IUserService = Application.Interfaces.IUserService;
 namespace Application.Services
 {
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
-        public UserService(AppDbContext context)
+        private readonly IS3Service _S3Service;
+        public UserService(AppDbContext context, IS3Service S3Service)
         {
             _context = context;
+            _S3Service = S3Service;
         }
         private async Task<Result<UserResponseForItselfDTO>> ChangeUserPropertyAsync(Ulid UserId, Action<User> action) 
         {
@@ -64,6 +69,27 @@ namespace Application.Services
            => ChangeUserPropertyAsync(UserId, u => u.Phone = DTO.Phone);
 
         public Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO)
-            => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);       
+            => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);    
+        
+        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file)
+        {
+            var fileUrlResult = await _S3Service.UploadPhotoAsync(file);
+
+            if (!fileUrlResult.IsSuccess)
+                return Result<UserResponseForItselfDTO>.Error(fileUrlResult.ErrorMessage, fileUrlResult.ErrorType ?? ErrorType.Validation);
+
+            string fileUrl = fileUrlResult.data;
+
+            var user = await _context.Users
+                .FindAsync(UserId);
+
+            if (user == null)
+                return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+                 
+            user.AvatarUrl = fileUrl;
+            await _context.SaveChangesAsync();
+
+            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+        }
     } 
 }

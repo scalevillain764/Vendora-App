@@ -1,4 +1,9 @@
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
+using Application.DTO.UserDTO;
 using Application.Interfaces;
+using Application.Result;
 using Application.Services;
 using Domain.Users;
 using dotenv.net;
@@ -23,6 +28,32 @@ namespace Vendora
 
             // Add services to the container.
             builder.Services.AddRazorPages();
+
+            // amazon s3 client
+            string? GARAGE_API_KEY = Environment.GetEnvironmentVariable("GARAGE_API_KEY");
+            string? GARAGE_SECRET_KEY = Environment.GetEnvironmentVariable("GARAGE_SECRET_KEY");
+            string? GARAGE_REGION = Environment.GetEnvironmentVariable("GARAGE_REGION");
+            string? SERVICE_URL = Environment.GetEnvironmentVariable("GARAGE_SERVICE_URL");
+
+            if (GARAGE_API_KEY == null || GARAGE_SECRET_KEY == null || GARAGE_REGION == null || SERVICE_URL == null)
+            {
+                Console.WriteLine("Проверьте данные Garage");
+                return;
+            }
+
+            var credentials = new BasicAWSCredentials(GARAGE_API_KEY, GARAGE_SECRET_KEY);
+            var region = RegionEndpoint.GetBySystemName(GARAGE_REGION);
+            var forcePathStyle = builder.Configuration.GetValue<bool>("S3Config:ForcePathStyle");
+            
+
+            var s3Config = new AmazonS3Config
+            {
+                ServiceURL = SERVICE_URL,
+                ForcePathStyle = forcePathStyle
+            };
+
+            builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(credentials, s3Config)); // adding S3Client
+            // amazon s3 client
 
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ICartService, CartService>();
