@@ -14,5 +14,6 @@ namespace Application.Interfaces
         Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO);
         Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file);
+        Task<Result<UserResponseForItselfDTO>> RemoveProfilePictureAsync(Ulid UserId, UserRemoveProfilePictureDTO DTO);
     }
 }

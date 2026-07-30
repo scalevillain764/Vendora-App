@@ -44,5 +44,64 @@ namespace Application.Services
 
             return Result<string>.Success($"{baseGarageURL}/{bucketName}/{fileName}");
         }
+
+        public async Task<Result<List<string>>> UploadPhotosAsync(List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0) return Result<List<string>>.Error("Проверьте корректность файлов", ErrorType.Validation);
+
+            var fileURLS = new List<string>();
+
+            foreach(var file in files)
+            {
+                if (file == null) continue;
+                var url = await UploadPhotoAsync(file);
+                
+                if(!url.IsSuccess)
+                {
+                    Console.WriteLine($"Ошибка загрузки фото: {file.FileName}");
+                    continue;
+                }
+
+                fileURLS.Add(url.data);
+            }
+
+            return Result<List<string>>.Success(fileURLS);
+        }
+
+        public async Task<Result<string>> RemovePhotoByUrlAsync(string fileURL)
+        {
+            if (string.IsNullOrEmpty(fileURL))  
+                return Result<string>.Error("Cсылка не найдена", ErrorType.NotFound);
+
+            string? bucketName = Environment.GetEnvironmentVariable("GARAGE_BUCKET_NAME");
+
+            if (bucketName == null)
+                return Result<string>.Error("Бакет не найден", ErrorType.NotFound);
+
+            try
+            {
+                string marker = $"/{bucketName}/";
+
+                int index = fileURL.IndexOf(marker);
+                if (index == -1)
+                    return Result<string>.Error("Проверьте корректность бакета", ErrorType.Validation);
+
+                string fileName = fileURL.Substring(index + marker.Length);
+
+                var request = new DeleteObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = fileName
+                };
+
+                await _S3Client.DeleteObjectAsync(request);
+                return Result<string>.Success(fileURL);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return Result<string>.Error(ex.Message, ErrorType.Conflict);
+            }
+        }
     }
 }

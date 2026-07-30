@@ -91,5 +91,24 @@ namespace Application.Services
 
             return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
         }
+
+        public async Task<Result<UserResponseForItselfDTO>> RemoveProfilePictureAsync(Ulid UserId, UserRemoveProfilePictureDTO DTO)
+        {
+            var user = await _context.Users
+                .FindAsync(UserId);
+
+            if (user == null)
+                return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            var str_rez = await _S3Service.RemovePhotoByUrlAsync(DTO.fileURL);
+
+            if (!str_rez.IsSuccess)
+                return Result<UserResponseForItselfDTO>.Error(str_rez.ErrorMessage, str_rez.ErrorType ?? ErrorType.Conflict);
+
+            user.AvatarUrl = null;
+            await _context.SaveChangesAsync();
+
+            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+        }
     } 
 }
