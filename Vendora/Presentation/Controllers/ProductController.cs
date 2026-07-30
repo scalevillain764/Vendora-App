@@ -2,6 +2,7 @@
 using IProductService = Application.Interfaces.IProductService;
 using Application.DTO.ProductDTO.StoreDTO;
 using Microsoft.AspNetCore.Authorization;
+using Application.DTO.ProductDTO;
 namespace Presentation.Controllers
 {
     [ApiController]
@@ -58,5 +59,25 @@ namespace Presentation.Controllers
         [Route("{ProductId}")]
         public async Task<IActionResult> GetProductByIdAsync(Ulid ProductId)
             => ProcessResult(await _productService.GetProduct(ProductId));
+
+        [HttpPatch]
+        [Route("preview/change/{ProductId}")]
+        public async Task<IActionResult> ChangeProductPreviewPictureAsync(Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO)
+            => ProcessResult(await _productService.ChangeProductPreviewPictureAsync(CurrentUserId, ProductId, DTO));
+
+        [HttpPatch]
+        [Route("preview/remove/{ProductId}")]
+        public async Task<IActionResult> RemoveProductPreviewPictureAsync(Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO)
+            => ProcessResult(await _productService.RemoveProductPreviewPictureAsync(CurrentUserId, ProductId, DTO));
+
+        [HttpPatch]
+        [Route("images/add/{ProductId}")]
+        public async Task<IActionResult> AddImagesToProductAsync(Ulid ProductId, ProductAddPicturesDTO DTO)
+            => ProcessResult(await _productService.AddPicturesToProductAsync(CurrentUserId, ProductId, DTO));
+
+        [HttpPatch]
+        [Route("images/remove/{ProductId}")]
+        public async Task<IActionResult> RemoveImageFromProductAsync(Ulid ProductId, ProductRemovePictureDTO DTO)
+            => ProcessResult(await _productService.RemovePictureFromProduct(CurrentUserId, ProductId, DTO));
     }
 }

@@ -28,7 +28,7 @@ namespace Application.Services
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
 
-            action(user);
+            action(user); 
 
             await _context.SaveChangesAsync();
 
@@ -71,6 +71,7 @@ namespace Application.Services
         public Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO)
             => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);    
         
+        // pictures
         public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file)
         {
             var fileUrlResult = await _S3Service.UploadPhotoAsync(file);
@@ -99,6 +100,9 @@ namespace Application.Services
 
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            if (user.AvatarUrl != DTO.fileURL)
+                return Result<UserResponseForItselfDTO>.Error("Проверьте корректность данных", ErrorType.Conflict);
 
             var str_rez = await _S3Service.RemovePhotoByUrlAsync(DTO.fileURL);
 

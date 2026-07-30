@@ -118,12 +118,14 @@ namespace Domain.Products
         
         // preview
         public string? PreviewUrl { get; set; }
+
+        public List<string>? Pictures = null;
         public bool IsDeleted { get; set; }
         private Product() { }
         internal Product(Ulid storeId, int categoryId, 
             string name, string? description, string? shortDescription,
             decimal price, int quantity,
-            string? previewUrl)
+            string? previewUrl, List<string>? pictures)
         {
             Id = Ulid.NewUlid();
             StoreId = storeId;
@@ -136,6 +138,7 @@ namespace Domain.Products
             Article = 0;
             PreviewUrl = previewUrl;
             IsDeleted = false;
+            Pictures = pictures;
         }
     }
 }

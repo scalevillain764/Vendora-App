@@ -1,4 +1,6 @@
-﻿using Application.DTO.ProductDTO.StoreDTO; 
+﻿using Application.DTO.ProductDTO;
+using Application.DTO.ProductDTO.StoreDTO;
+using Application.Interfaces;
 using Application.Result;
 using Domain.ErrorTypes;
 using Domain.Products;
@@ -11,9 +13,11 @@ namespace Application.Services
     public class ProductService : IProductService
     {
         private readonly AppDbContext _context;
-        public ProductService(AppDbContext context)
+        private readonly IS3Service _S3Service;
+        public ProductService(AppDbContext context, IS3Service S3Service)
         {
             _context = context;
+            _S3Service = S3Service;
         }
         private async Task<Result<ProductResponseDTO>> ChangeProductProperty(Ulid UserId, Ulid ProductId, Action<Product> action)
         {
@@ -49,7 +53,7 @@ namespace Application.Services
 
             var newProduct = new Product
                 (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
-                DTO.Quantity, DTO.PreviewUrl);
+                DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
 
             _context.Products.Add(newProduct);
             await _context.SaveChangesAsync(); 
@@ -81,6 +85,81 @@ namespace Application.Services
             await _context.SaveChangesAsync();
             return Result<ProductResponseDTO>.Success(productDTO);
         }
+
+        // pics
+        public Task<Result<ProductResponseDTO>> AddPicturesToProductAsync(Ulid UserId, Ulid ProductId, ProductAddPicturesDTO DTO)
+            => ChangeProductProperty(UserId, ProductId, x => x.Pictures.AddRange(DTO.pictures)); // load new pics for product, after creating e.g.
+
+        public async Task<Result<ProductResponseDTO>> RemovePictureFromProduct(Ulid UserId, Ulid ProductId, ProductRemovePictureDTO DTO) // rempve picture from product, after creaing e.g. 
+        {
+            var storeId = await _context.Stores
+                .Where(x => x.SellerId == UserId)
+                .Select(x => x.Id)
+                .FirstOrDefaultAsync();
+
+            if (storeId == default)
+                return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden);
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(x => x.Id == ProductId
+                && x.StoreId == storeId);
+
+            if (product == null)
+                return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            if (product.Pictures == null)
+                return Result<ProductResponseDTO>.Error("Фото отсутсвуют", ErrorType.Conflict);
+
+            var productFileUrl = product.Pictures.FirstOrDefault(x => x == DTO.fileURL);
+
+            if(productFileUrl == default)
+                return Result<ProductResponseDTO>.Error("Фотография не найдена", ErrorType.NotFound);
+
+            var removement_rezult = await _S3Service.RemovePhotoByUrlAsync(productFileUrl);
+            if (!removement_rezult.IsSuccess)
+                return Result<ProductResponseDTO>.Error(removement_rezult.ErrorMessage,
+                    removement_rezult.ErrorType ?? ErrorType.Conflict);
+
+            product.Pictures.Remove(DTO.fileURL);
+            
+            await _context.SaveChangesAsync();
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product));
+        }
+
+        public Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO) // change preview after creating e.g
+            => ChangeProductProperty(UserId, ProductId, x => x.PreviewUrl = DTO.previewURL);
+
+        public async Task<Result<ProductResponseDTO>> RemoveProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO) // remove preview after creating e.g
+        {
+            var storeId = await _context.Stores
+               .Where(x => x.SellerId == UserId)
+               .Select(x => x.Id)
+               .FirstOrDefaultAsync();
+
+            if (storeId == default)
+                return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden);
+
+            var product = await _context.Products
+                .FirstOrDefaultAsync(x => x.Id == ProductId
+                && x.StoreId == storeId);
+
+            if (product == null)
+                return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            if (product.PreviewUrl == null || product.PreviewUrl != DTO.previewURL)
+                return Result<ProductResponseDTO>.Error("Фотография не нашла", ErrorType.NotFound);   
+
+            var removement_rezult = await _S3Service.RemovePhotoByUrlAsync(product.PreviewUrl);
+            if (!removement_rezult.IsSuccess)
+                return Result<ProductResponseDTO>.Error(removement_rezult.ErrorMessage,
+                    removement_rezult.ErrorType ?? ErrorType.Conflict);
+
+            product.PreviewUrl = null;
+            await _context.SaveChangesAsync();
+
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product));
+        }
+        // pics
 
         public async Task<Result<ProductResponseDTO>> GetProduct(Ulid ProductId)
         {

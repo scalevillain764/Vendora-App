@@ -8,6 +8,7 @@
          string? ShortDescription,
          decimal Price,
          int Quantity,
-         string? PreviewUrl
+         string? PreviewUrl,
+         List<string> Pictures
     );
 }
