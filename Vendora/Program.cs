@@ -8,9 +8,10 @@ using Application.Services;
 using Domain.Users;
 using dotenv.net;
 using Infrastructure.AppDbContexts;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Presentation.ExceptionMiddlewares;
 
 // microsoft
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.IdentityModel.Tokens;
@@ -54,7 +55,10 @@ namespace Vendora
 
             builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(credentials, s3Config)); // adding S3Client
             // amazon s3 client
-
+            
+            // services;
+            builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
+            builder.Services.AddScoped<ISearchService, SearchService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IFavouriteService, FavouriteService>();
@@ -110,21 +114,20 @@ namespace Vendora
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {          
-                app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseExceptionHandler("/Error");   
                 app.UseHsts();
             }
 
-            app.UseSwagger(); // Генерирует JSON-спецификацию OpenAPI
+            app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            }); // Включает интерактивный веб-интерфейс
+            }); 
 
             app.UseHttpsRedirection();
             app.UseRouting();
 
             // middleware
-           /* app.UseMiddleware<ExceptionMiddleware>();*/
+            app.UseMiddleware<ExceptionMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();
             // middleware
