@@ -1,14 +1,15 @@
 ﻿
  using Application.DTO.StoreDTO;
+using Application.DTO.UserDTO;
+using Application.Interfaces;
 using Application.Result;
 using Domain.ErrorTypes;
+using Domain.Stores;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
-using IStoreService = Application.Interfaces.IStoreService;
-using Domain.Stores;
-using Application.Interfaces;
 using System.Runtime.Intrinsics.X86;
+using IStoreService = Application.Interfaces.IStoreService;
 namespace Application.Services
 {
     public class StoreService : IStoreService
@@ -74,26 +75,34 @@ namespace Application.Services
 
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid UserId, StoreChangeNameDTO DTO) 
             => ChangeStorePropertyAsync(UserId, x => x.Name = DTO.Name);
-
+        // pics
         public async Task<Result<StoreOwnerResponseDTO>> ChangeStoreAvatarAsync(Ulid UserId, IFormFile file)
         {
-            var store = await _context.Stores
-             .FirstOrDefaultAsync(x => x.SellerId == UserId);
+            var loadPicture = await _S3Service.UploadPhotoAsync(file);
+            if (!loadPicture.IsSuccess)
+                return Result<StoreOwnerResponseDTO>.Error(loadPicture.ErrorMessage,
+                    loadPicture.ErrorType ?? ErrorType.Conflict);
 
-            if (store == null)
-                return Result<StoreOwnerResponseDTO>.Error("Магази не создан", ErrorType.Forbidden);
+            string NewUrl = loadPicture.data;
+            string? PrevUrl = null;
 
-            var loadPhotoResult = await _S3Service.UploadPhotoAsync(file);
-            if (!loadPhotoResult.IsSuccess)
-                return Result<StoreOwnerResponseDTO>.Error(loadPhotoResult.ErrorMessage, loadPhotoResult.ErrorType ?? ErrorType.Conflict);
+            var updateStoreAvatarUrl = await ChangeStorePropertyAsync(UserId, x =>
+            {
+                PrevUrl = x.UrlAvatar;
+                x.UrlAvatar = NewUrl;
+            });
 
-            string url = loadPhotoResult.data;
+            if (!updateStoreAvatarUrl.IsSuccess)
+            {
+                await _S3Service.RemovePhotoByUrlAsync(NewUrl);
+                return Result<StoreOwnerResponseDTO>.Error(updateStoreAvatarUrl.ErrorMessage,
+                   updateStoreAvatarUrl.ErrorType ?? ErrorType.Conflict);
+            }
 
-            store.UrlAvatar = url;
+            if (!string.IsNullOrEmpty(PrevUrl))
+                await _S3Service.RemovePhotoByUrlAsync(PrevUrl);
 
-            await _context.SaveChangesAsync();
-
-            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
+            return Result<StoreOwnerResponseDTO>.Success(updateStoreAvatarUrl.data);
         }
 
         public async Task<Result<StoreOwnerResponseDTO>> RemoveStoreAvatarAsync(Ulid UserId, StoreRemoveAvatarUrlDTO DTO)
@@ -113,7 +122,7 @@ namespace Application.Services
 
             return Result<StoreOwnerResponseDTO>.Success(updateStoreAvatarUrl.data);
         }
-
+        // pics
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid UserId, StoreChangeDescriptionDTO DTO)
            => ChangeStorePropertyAsync(UserId, x => x.Description = DTO.Description);
     }

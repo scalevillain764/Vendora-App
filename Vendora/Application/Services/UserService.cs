@@ -1,8 +1,10 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Application.DTO.ProductDTO.StoreDTO;
 using Application.DTO.UserDTO;
 using Application.Result;
 using Domain.ErrorTypes;
+using Domain.Products;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
@@ -74,45 +76,52 @@ namespace Application.Services
         // pictures
         public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file)
         {
-            var fileUrlResult = await _S3Service.UploadPhotoAsync(file);
+            var loadPicture = await _S3Service.UploadPhotoAsync(file);
+            if (!loadPicture.IsSuccess)
+                return Result<UserResponseForItselfDTO>.Error(loadPicture.ErrorMessage, 
+                    loadPicture.ErrorType ?? ErrorType.Conflict);
 
-            if (!fileUrlResult.IsSuccess)
-                return Result<UserResponseForItselfDTO>.Error(fileUrlResult.ErrorMessage, fileUrlResult.ErrorType ?? ErrorType.Validation);
+            string NewUrl = loadPicture.data;
+            string? PrevUrl = null;
 
-            string fileUrl = fileUrlResult.data;
+            var updateUserProfilePictureUrl = await ChangeUserPropertyAsync(UserId, x =>
+            {
+                PrevUrl = x.AvatarUrl;
+                x.AvatarUrl = NewUrl;
+            });
 
-            var user = await _context.Users
-                .FindAsync(UserId);
+            if (!updateUserProfilePictureUrl.IsSuccess)
+            {
+                await _S3Service.RemovePhotoByUrlAsync(NewUrl);
+                return Result<UserResponseForItselfDTO>.Error(updateUserProfilePictureUrl.ErrorMessage,
+                    updateUserProfilePictureUrl.ErrorType ?? ErrorType.Conflict);
+            }
 
-            if (user == null)
-                return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
-                 
-            user.AvatarUrl = fileUrl;
-            await _context.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(PrevUrl))
+                await _S3Service.RemovePhotoByUrlAsync(PrevUrl);
 
-            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+            return Result<UserResponseForItselfDTO>.Success(updateUserProfilePictureUrl.data);
         }
 
         public async Task<Result<UserResponseForItselfDTO>> RemoveProfilePictureAsync(Ulid UserId, UserRemoveProfilePictureDTO DTO)
-        {
-            var user = await _context.Users
-                .FindAsync(UserId);
+        {           
+            var updateUserProfilePicture = await ChangeUserPropertyAsync(UserId, x => x.AvatarUrl = null);
 
-            if (user == null)
-                return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+            if (!updateUserProfilePicture.IsSuccess)
+                return Result<UserResponseForItselfDTO>.Error(updateUserProfilePicture.ErrorMessage,
+              updateUserProfilePicture.ErrorType ?? ErrorType.Conflict);
 
-            if (user.AvatarUrl != DTO.fileURL)
-                return Result<UserResponseForItselfDTO>.Error("Проверьте корректность данных", ErrorType.Conflict);
+            var removeUserPictureFromS3 = await _S3Service.RemovePhotoByUrlAsync(DTO.fileURL);
 
-            var str_rez = await _S3Service.RemovePhotoByUrlAsync(DTO.fileURL);
+            if (!removeUserPictureFromS3.IsSuccess)
+            {
+                await ChangeUserPropertyAsync(UserId, x => x.AvatarUrl = DTO.fileURL);
+                return Result<UserResponseForItselfDTO>.Error(removeUserPictureFromS3.ErrorMessage,
+                    removeUserPictureFromS3.ErrorType ?? ErrorType.Conflict);
+            }
 
-            if (!str_rez.IsSuccess)
-                return Result<UserResponseForItselfDTO>.Error(str_rez.ErrorMessage, str_rez.ErrorType ?? ErrorType.Conflict);
-
-            user.AvatarUrl = null;
-            await _context.SaveChangesAsync();
-
-            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+            return Result<UserResponseForItselfDTO>.Success(updateUserProfilePicture.data);
         }
+       // pics
     } 
 }
