@@ -1,6 +1,7 @@
 ﻿using Domain.Stores;
 using Domain.CartItems;
 using Domain.Users;
+using Domain.ProductReviews;
 using Domain.OrderItems;
 namespace Domain.Products
 {
@@ -14,6 +15,7 @@ namespace Domain.Products
 
         public List<CartItem> CartItems { get; private set; } = new();
         public List<OrderItem> OrderItems { get; private set; } = new();
+        public List<ProductReview> ProductReviews { get; private set; } = new();
     
         public enum ProductCategory
         {

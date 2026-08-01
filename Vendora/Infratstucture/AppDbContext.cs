@@ -2,6 +2,7 @@
 using Domain.Carts;
 using Domain.Products;
 using Domain.Transactions;
+using Domain.ProductReviews;
 using Domain.Stores;
 using Domain.Users;
 using Domain.OrderItems;
@@ -101,6 +102,12 @@ namespace Infrastructure.AppDbContexts
             // favourite
             modelBuilder.Entity<Favourite>()
                 .HasKey(x => new { x.UserId, x.ProductId });
+
+            // product preview
+            modelBuilder.Entity<ProductReview>()
+                .HasOne(pr => pr.product)
+                .WithMany(p => p.ProductReviews)
+                .HasForeignKey(pr => pr.ProductId);
 
             // remove auto-increment
             foreach(var dbSet in modelBuilder.Model.GetEntityTypes())
