@@ -6,8 +6,9 @@ namespace Application.Interfaces
 {
     public interface IProductPreviewService
     {
-        Task<Result<ProductReviewResponseDTO>> AddProductReviewAsync(Ulid UserId, ProductReviewCreationAndChangeDTO DTO);
+        Task<Result<ProductReviewResponseDTO>> AddProductReviewAsync(Ulid UserId, Ulid ProductId, ProductReviewCreationAndChangeDTO DTO);
         Task<Result<ProductReviewResponseDTO>> DeleteProductReviewAsync(Ulid UserId, Ulid ReviewId);
         Task<Result<ProductReviewResponseDTO>> EditProductReviewAsync(Ulid UserId, Ulid ReviewId, ProductReviewCreationAndChangeDTO DTO);
+        // Add Repl
     }
 }

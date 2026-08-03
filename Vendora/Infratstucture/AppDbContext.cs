@@ -8,6 +8,7 @@ using Domain.Users;
 using Domain.OrderItems;
 using Domain.Orders;
 using Domain.Favourites;
+using Domain.ProductReviews;
 using Infrastructure.UlidToStringConverters;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
@@ -22,9 +23,9 @@ namespace Infrastructure.AppDbContexts
         public DbSet <OrderItem> OrderItems { get; set; }
         public DbSet <Cart> Carts { get; set; }
         public DbSet <CartItem> CartItems { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
-        
+        public DbSet<Transaction> Transactions { get; set; }      
         public DbSet<Favourite> Favourites { get; set; }
+        public DbSet<ProductReview> ProductReviews { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
