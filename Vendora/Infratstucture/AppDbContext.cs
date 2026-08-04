@@ -1,16 +1,17 @@
 ﻿using Domain.CartItems;
 using Domain.Carts;
-using Domain.Products;
-using Domain.Transactions;
-using Domain.ProductReviews;
-using Domain.Stores;
-using Domain.Users;
+using Domain.Favourites;
 using Domain.OrderItems;
 using Domain.Orders;
-using Domain.Favourites;
 using Domain.ProductReviews;
+using Domain.ProductReviews;
+using Domain.Products;
+using Domain.Stores;
+using Domain.Transactions;
+using Domain.Users;
 using Infrastructure.UlidToStringConverters;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using System.Xml;
 namespace Infrastructure.AppDbContexts
 {
@@ -122,6 +123,26 @@ namespace Infrastructure.AppDbContexts
                             property.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
                     }
                 }
+            }
+        }
+
+        public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+        {
+            public AppDbContext CreateDbContext(string[] args)
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+
+                string? connectionString = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "Строка подключения не найдена ни в переменной окружения, ни в аргументах команды. " +
+                        "Передайте её так: dotnet ef database update -- \"Host=localhost;...\"");
+                }
+
+                optionsBuilder.UseNpgsql(connectionString);
+                return new AppDbContext(optionsBuilder.Options);
             }
         }
     }
