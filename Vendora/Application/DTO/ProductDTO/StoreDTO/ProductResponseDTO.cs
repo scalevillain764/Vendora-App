@@ -1,4 +1,5 @@
 ﻿using Domain.Products;
+using Application.DTO.ProductReviewDTO;
 namespace Application.DTO.ProductDTO.StoreDTO
 {
     public record ProductResponseDTO(
@@ -10,15 +11,20 @@ namespace Application.DTO.ProductDTO.StoreDTO
          decimal Price,
          int Quantity,
          string? PreviewUrl,
-         long Article 
+         long Article,
+         List<ProductReviewResponseDTO> Reviews,
+         double Average_rating
     )
     {
-        public ProductResponseDTO(Product pr) : 
-            this(pr.Id, pr.StoreId, 
-                pr.Category.ToString(), 
-                pr.Name, pr.Description, 
-                pr.Price, pr.Quantity, 
-                pr.PreviewUrl, pr.Article)
+        public ProductResponseDTO(Product pr) :
+            this(pr.Id, pr.StoreId,
+                pr.Category.ToString(),
+                pr.Name, pr.Description,
+                pr.Price, pr.Quantity,
+                pr.PreviewUrl, pr.Article,
+                pr.ProductReviews.Select(x => new ProductReviewResponseDTO(x)).ToList(),
+                pr.ProductReviews.Average(x => x.Rating)
+            )
         { }
     }
 }

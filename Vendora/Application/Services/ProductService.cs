@@ -22,6 +22,7 @@ namespace Application.Services
         private async Task<Result<ProductResponseDTO>> ChangeProductProperty(Ulid UserId, Ulid ProductId, Action<Product> action)
         {
             var product = await _context.Products
+                .Include(x => x.ProductReviews)
                 .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
 
             if (product == null)
@@ -63,6 +64,7 @@ namespace Application.Services
                 return Result<ProductResponseDTO>.Error("Магазин не найден", ErrorType.NotFound);
 
             var product = await _context.Products
+                .Include(x => x.ProductReviews)
                 .FirstOrDefaultAsync(p => p.Id == ProductId 
                     && p.StoreId == storeId);
 
@@ -120,6 +122,7 @@ namespace Application.Services
         public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile file) // change preview after creating e.g
         {
             var loadPicture = await _S3Service.UploadPhotoAsync(file);
+
             if (!loadPicture.IsSuccess)
                 return Result<ProductResponseDTO>.Error(loadPicture.ErrorMessage, loadPicture.ErrorType ?? ErrorType.Conflict);
 
