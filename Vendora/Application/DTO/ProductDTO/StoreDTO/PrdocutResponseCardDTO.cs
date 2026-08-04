@@ -8,10 +8,20 @@ namespace Application.DTO.ProductDTO.StoreDTO
         decimal Price,
         string? ShortDescription,
         string? PreviewUrl,
-        bool IsFavourite
+        bool IsFavourite,
+        double AverageRating,
+        int RatingsAmount
     )
     {
         public ProductCardDTO(Product product, bool isFavourite) : 
-            this(product.Id, product.Store.Name, product.Name, product.Price, product.ShortDescription, product.PreviewUrl, isFavourite) { }
+            this(product.Id, 
+                product.Store.Name, 
+                product.Name, 
+                product.Price, 
+                product.ShortDescription, 
+                product.PreviewUrl, 
+                isFavourite,
+                product.ProductReviews.Average(x => x.Rating),
+                product.ProductReviews.Count) { }
     }
 }

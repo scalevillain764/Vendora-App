@@ -17,7 +17,9 @@ namespace Application.Services
 
         public async Task<Result<List<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO)
         {
-            var products = _context.Products.AsQueryable();
+            var products = _context.Products
+                .Include(x => x.ProductReviews)
+                .AsQueryable();
 
             if(!string.IsNullOrWhiteSpace(DTO.Query))
             {
