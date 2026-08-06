@@ -122,7 +122,7 @@ namespace Application.Services
             return Result<List<ProductReviewResponseDTO>>.Success(rez);
         }
 
-        public async Task<Result<ProductReviewResponseDTO>> ReplyAsync(Ulid UserId, Ulid ReviewId, ProductReviewSellerReplyDTO DTO)
+        public async Task<Result<ProductReviewResponseDTO>> ReplyProductReviewAsync(Ulid UserId, Ulid ReviewId, ProductReviewSellerReplyDTO DTO)
         {
             var review = await _context.ProductReviews
               .Include(x => x.store)

@@ -21,8 +21,7 @@ namespace Domain.UserQuestions
         public List<string>? PhotoUrls { get; set; } = null;
         public DateTime CreatedAt { get; set; }
 
-        public UserQuestion(Ulid userId, Ulid productId, Ulid storeId, string questionText,
-            int rating, List<string>? photoUrls)
+        public UserQuestion(Ulid userId, Ulid productId, Ulid storeId, string questionText, List<string>? photoUrls)
         {
             Id = Ulid.NewUlid();
             UserId = userId;
