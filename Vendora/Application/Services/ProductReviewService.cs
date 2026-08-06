@@ -32,11 +32,13 @@ namespace Application.Services
             if(storeId == null)
                 return Result<ProductReviewResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
 
-            bool exists = await _context.Orders.AnyAsync(x => x.UserId == UserId
-                    && x.Items.Any(z => z.ProductId == ProductId));
+            var order = await _context.OrderItems
+                .Where(x => x.ProductId == ProductId)
+                .Select(x => x.Order)
+                .FirstOrDefaultAsync(x => x.UserId == UserId);
 
-            if (!exists)
-                return Result<ProductReviewResponseDTO>.Error("Сначала необходимо купить товар", ErrorType.Forbidden);
+            if (order == null || order.Status != Domain.Orders.Order.OrderStatus.Completed)
+                return Result<ProductReviewResponseDTO>.Error("Сначала приорбретите товар", ErrorType.Forbidden);
 
             var review = new ProductReview(UserId, ProductId, storeId.Value, DTO.ReviewText, DTO.Rating, DTO.PhotoUrl);
 
@@ -44,7 +46,7 @@ namespace Application.Services
 
             await _context.SaveChangesAsync();
 
-            return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review));
+            return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
         }
 
         public async Task<Result<ProductReviewResponseDTO>> DeleteProductReviewAsync(Ulid UserId, Ulid ReviewId)
@@ -58,7 +60,7 @@ namespace Application.Services
             if (review.UserId != UserId)
                 return Result<ProductReviewResponseDTO>.Error("Это не ваш отзыв", ErrorType.Forbidden);
 
-            var DTO = new ProductReviewResponseDTO(review);
+            var DTO = new ProductReviewResponseDTO(review, false);
             _context.ProductReviews.Remove(review);
 
             await _context.SaveChangesAsync();
@@ -72,13 +74,13 @@ namespace Application.Services
                .FindAsync(ReviewId);
 
             if (review == null)
-                return Result<ProductReviewResponseDTO>.Error("Отзыв не найден", ErrorType.Conflict);
+                return Result<ProductReviewResponseDTO>.Error("Отзыв не найден", ErrorType.NotFound);
 
             if (review.UserId != UserId)
                 return Result<ProductReviewResponseDTO>.Error("Это не ваш отзыв", ErrorType.Forbidden);
 
-            review.ReviewText = review.ReviewText == DTO.ReviewText ? review.ReviewText : DTO.ReviewText;
-            review.Rating = review.Rating == DTO.Rating ? review.Rating : DTO.Rating;
+            review.ReviewText = DTO.ReviewText;
+            review.Rating = DTO.Rating;
 
             if (DTO.PhotoUrl == null) review.PhotoUrls = null;
             else
@@ -96,7 +98,47 @@ namespace Application.Services
 
             review.UpdatedAt = DateTime.UtcNow;
 
-            return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review));
+            await _context.SaveChangesAsync();
+
+            return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
+        }
+
+        public async Task<Result<List<ProductReviewResponseDTO>>> GetProductReviewsAsync(Ulid UserId, Ulid ProductId)
+        {
+            var product = await _context.Products
+                    .Include(x => x.Store)
+                .FirstOrDefaultAsync(x => x.Id == ProductId);
+
+            if (product == null)
+                return Result<List<ProductReviewResponseDTO>>.Error("Товар не найден", ErrorType.NotFound);
+
+            bool canReply = product.Store.SellerId == UserId;
+
+            var rez = await _context.ProductReviews
+                .Where(x => x.ProductId == ProductId)
+                .Select(x => new ProductReviewResponseDTO(x, canReply))
+                .ToListAsync();
+
+            return Result<List<ProductReviewResponseDTO>>.Success(rez);
+        }
+
+        public async Task<Result<ProductReviewResponseDTO>> ReplyAsync(Ulid UserId, Ulid ReviewId, ProductReviewSellerReplyDTO DTO)
+        {
+            var review = await _context.ProductReviews
+              .Include(x => x.store)
+              .FirstOrDefaultAsync(x => x.Id == ReviewId);
+
+            if (review == null)
+                return Result<ProductReviewResponseDTO>.Error("Отзыв не найден", ErrorType.NotFound);
+
+            if (review.store.SellerId != UserId)
+                return Result<ProductReviewResponseDTO>.Error("Вы не можете ответить", ErrorType.Conflict);
+
+            review.SellerReply = DTO.SellerReply;
+
+            await _context.SaveChangesAsync();
+
+            return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
         }
     }
 }

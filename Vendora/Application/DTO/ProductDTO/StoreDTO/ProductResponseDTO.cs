@@ -12,7 +12,6 @@ namespace Application.DTO.ProductDTO.StoreDTO
          int Quantity,
          string? PreviewUrl,
          long Article,
-         List<ProductReviewResponseDTO> Reviews,
          double Average_rating
     )
     {
@@ -22,7 +21,6 @@ namespace Application.DTO.ProductDTO.StoreDTO
                 pr.Name, pr.Description,
                 pr.Price, pr.Quantity,
                 pr.PreviewUrl, pr.Article,
-                pr.ProductReviews.Select(x => new ProductReviewResponseDTO(x)).ToList(),
                 pr.ProductReviews.Average(x => x.Rating)
             )
         { }
