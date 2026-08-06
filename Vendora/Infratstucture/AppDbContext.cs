@@ -4,7 +4,7 @@ using Domain.Favourites;
 using Domain.OrderItems;
 using Domain.Orders;
 using Domain.ProductReviews;
-using Domain.ProductReviews;
+using Domain.UserQuestions;
 using Domain.Products;
 using Domain.Stores;
 using Domain.Transactions;
@@ -27,6 +27,7 @@ namespace Infrastructure.AppDbContexts
         public DbSet<Transaction> Transactions { get; set; }      
         public DbSet<Favourite> Favourites { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<UserQuestion> UserQuestions { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
@@ -110,6 +111,11 @@ namespace Infrastructure.AppDbContexts
                 .HasOne(pr => pr.product)
                 .WithMany(p => p.ProductReviews)
                 .HasForeignKey(pr => pr.ProductId);
+
+            modelBuilder.Entity<UserQuestion>()
+                .HasOne(uq => uq.product)
+                .WithMany(p => p.UserQuestions)
+                .HasForeignKey(uq => uq.ProductId);
 
             // remove auto-increment
             foreach(var dbSet in modelBuilder.Model.GetEntityTypes())
