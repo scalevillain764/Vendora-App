@@ -58,7 +58,7 @@ namespace Application.Services
             if (review == null)
                 return Result<ProductReviewResponseDTO>.Error("Отзыв не найден", ErrorType.Conflict);
 
-            if (review.UserId != UserId || review.store.SellerId != UserId /*удаление админом магазина*/)
+            if (review.UserId != UserId && review.store.SellerId != UserId /*удаление админом магазина*/)
                 return Result<ProductReviewResponseDTO>.Error("Это не ваш отзыв", ErrorType.Forbidden);
 
             var DTO = new ProductReviewResponseDTO(review, false);
@@ -82,21 +82,7 @@ namespace Application.Services
 
             review.ReviewText = DTO.ReviewText;
             review.Rating = DTO.Rating;
-
-            if (DTO.PhotoUrl == null) review.PhotoUrls = null;
-            else
-            {
-                if (review.PhotoUrls != null)
-                {
-                    bool areEqual = review.PhotoUrls.Count == DTO.PhotoUrl.Count
-                        && new HashSet<string>(review.PhotoUrls).SetEquals(DTO.PhotoUrl);
-
-                    review.PhotoUrls = areEqual ? review.PhotoUrls : DTO.PhotoUrl;
-                }
-                else
-                    review.PhotoUrls = DTO.PhotoUrl;
-            }
-
+            review.PhotoUrls = DTO.PhotoUrl;
             review.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

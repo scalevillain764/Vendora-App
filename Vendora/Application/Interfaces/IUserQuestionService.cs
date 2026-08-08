@@ -6,7 +6,7 @@ namespace Application.Interfaces
     {
         Task<Result<UserQuestionResponseDTO>> AskQuestionAsync(Ulid UserId, Ulid ProductId, UserQuestionCreateAndChangeDTO DTO);
         Task<Result<UserQuestionResponseDTO>> RemoveQuestionAsync(Ulid UserId, Ulid QuestionId);
-        Task<Result<UserQuestionResponseDTO>> ChangeQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO);
+        Task<Result<UserQuestionResponseDTO>> EditQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO);
         Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuastionReplyDTO DTO);
         Task<Result<List<UserQuestionResponseDTO>>> GetUserQuestionsToProductAsync(Ulid UserId, Ulid ProductId);
     }

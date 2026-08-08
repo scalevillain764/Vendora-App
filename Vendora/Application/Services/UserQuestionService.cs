@@ -34,12 +34,13 @@ namespace Application.Services
         public async Task<Result<UserQuestionResponseDTO>> RemoveQuestionAsync(Ulid UserId, Ulid QuestionId)
         {
             var question = await _context.UserQuestions
-                .FindAsync(QuestionId);
+                .Include(x => x.store)
+                .FirstOrDefaultAsync(x => x.Id == QuestionId);
 
             if (question == null)
                 return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
 
-            if (question.UserId != UserId)
+            if (question.UserId != UserId && question.store.SellerId != UserId)
                 return Result<UserQuestionResponseDTO>.Error("Это не ваш вопрос", ErrorType.Forbidden);
 
             var dto = new UserQuestionResponseDTO(question, false);
@@ -51,13 +52,16 @@ namespace Application.Services
             return Result<UserQuestionResponseDTO>.Success(dto);
         }
 
-        public async Task<Result<UserQuestionResponseDTO>> ChangeQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO)
+        public async Task<Result<UserQuestionResponseDTO>> EditQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO)
         {
             var question = await _context.UserQuestions
                 .FindAsync(QuestionId);
 
             if (question == null)
                 return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
+
+            if (question.UserId != UserId)
+                return Result<UserQuestionResponseDTO>.Error("Это не ваш вопрос", ErrorType.Forbidden);
 
             question.QuestionText = DTO.QuestionText;
             question.PhotoUrls = DTO.PhotoUrl;
