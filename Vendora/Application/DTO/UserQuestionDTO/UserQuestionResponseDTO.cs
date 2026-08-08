@@ -3,12 +3,12 @@ namespace Application.DTO.UserQuestionDTO
 {
     public record UserQuestionResponseDTO(Ulid Id, string? UserAvatarPicture, string UserProfileName,
         List<string>? Photos, string QuestionText, string? SellerReply, bool CanSellerReply,
-        DateTime CreateAt)
+        DateTime CreateAt, DateTime? UpdatedAt)
     {
         public UserQuestionResponseDTO(UserQuestion question, bool CanSellerReply)
             : this(question.Id, question.user.AvatarUrl, question.user.ProfileName,
                   question.PhotoUrls, question.QuestionText, question.SellerReply, 
-                  CanSellerReply, question.CreatedAt)
+                  CanSellerReply, question.CreatedAt, question.UpdatedAt)
         { }
     }
 }

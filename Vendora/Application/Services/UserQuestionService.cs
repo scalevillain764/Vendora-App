@@ -1,9 +1,11 @@
-﻿using IUserQuestionService = Application.Interfaces.IUserQuestionService;
+﻿using Application.DTO.ProductReviewDTO;
 using Application.DTO.UserQuestionDTO;
 using Application.Result;
-using Infrastructure.AppDbContexts;
 using Domain.ErrorTypes;
 using Domain.UserQuestions;
+using Infrastructure.AppDbContexts;
+using Microsoft.EntityFrameworkCore;
+using IUserQuestionService = Application.Interfaces.IUserQuestionService;
 namespace Application.Services
 {
     public class UserQuestionService : IUserQuestionService
@@ -47,6 +49,61 @@ namespace Application.Services
             await _context.SaveChangesAsync();
 
             return Result<UserQuestionResponseDTO>.Success(dto);
+        }
+
+        public async Task<Result<UserQuestionResponseDTO>> ChangeQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO)
+        {
+            var question = await _context.UserQuestions
+                .FindAsync(QuestionId);
+
+            if (question == null)
+                return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
+
+            question.QuestionText = DTO.QuestionText;
+            question.PhotoUrls = DTO.PhotoUrl;
+            question.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
+        }
+
+        public async Task<Result<List<UserQuestionResponseDTO>>> GetUserQuestionsToProductAsync(Ulid UserId, Ulid ProductId)
+        {
+            var product = await _context.Products
+                   .Include(x => x.Store)
+               .FirstOrDefaultAsync(x => x.Id == ProductId);
+
+            if (product == null)
+                return Result<List<UserQuestionResponseDTO>>.Error("Товар не найден", ErrorType.NotFound);
+
+            bool canReply = product.Store.SellerId == ProductId;
+
+            var rez = await _context.UserQuestions
+                .Where(x => x.ProductId == ProductId)
+                .Select(x => new UserQuestionResponseDTO(x, canReply))
+                .ToListAsync();
+
+            return Result<List<UserQuestionResponseDTO>>.Success(rez);
+        }
+
+        public async Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuastionReplyDTO DTO)
+        {
+            var question = await _context.UserQuestions
+                .Include(x => x.store)
+                .FirstOrDefaultAsync(x => x.Id == QuestionId);
+
+            if (question == null)
+                return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
+
+            if (question.store.SellerId != UserId)
+                return Result<UserQuestionResponseDTO>.Error("Вы не можете ответить на этот вопрос", ErrorType.Forbidden);
+
+            question.SellerReply = DTO.SellerReply;
+
+            await _context.SaveChangesAsync();
+
+            return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
         }
     }
 }

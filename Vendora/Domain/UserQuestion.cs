@@ -20,6 +20,7 @@ namespace Domain.UserQuestions
         public string? SellerReply { get; set; }
         public List<string>? PhotoUrls { get; set; } = null;
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public UserQuestion(Ulid userId, Ulid productId, Ulid storeId, string questionText, List<string>? photoUrls)
         {
@@ -31,6 +32,7 @@ namespace Domain.UserQuestions
             PhotoUrls = photoUrls;
             CreatedAt = DateTime.UtcNow;
             SellerReply = null;
+            UpdatedAt = null;
         }
     }
 }
