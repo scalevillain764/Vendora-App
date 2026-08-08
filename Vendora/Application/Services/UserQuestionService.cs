@@ -31,7 +31,7 @@ namespace Application.Services
 
             return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
         }
-        public async Task<Result<UserQuestionResponseDTO>> RemoveQuestionAsync(Ulid UserId, Ulid QuestionId)
+        public async Task<Result<UserQuestionResponseDTO>> DeleteQuestionAsync(Ulid UserId, Ulid QuestionId)
         {
             var question = await _context.UserQuestions
                 .Include(x => x.store)
@@ -91,7 +91,7 @@ namespace Application.Services
             return Result<List<UserQuestionResponseDTO>>.Success(rez);
         }
 
-        public async Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuastionReplyDTO DTO)
+        public async Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionReplyDTO DTO)
         {
             var question = await _context.UserQuestions
                 .Include(x => x.store)
