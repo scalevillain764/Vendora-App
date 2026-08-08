@@ -52,12 +52,13 @@ namespace Application.Services
         public async Task<Result<ProductReviewResponseDTO>> DeleteProductReviewAsync(Ulid UserId, Ulid ReviewId)
         {
             var review = await _context.ProductReviews
-                .FindAsync(ReviewId);
+                .Include(x => x.store)
+                .FirstOrDefaultAsync(x => x.Id == ReviewId);
 
             if (review == null)
                 return Result<ProductReviewResponseDTO>.Error("Отзыв не найден", ErrorType.Conflict);
 
-            if (review.UserId != UserId)
+            if (review.UserId != UserId || review.store.SellerId != UserId /*удаление админом магазина*/)
                 return Result<ProductReviewResponseDTO>.Error("Это не ваш отзыв", ErrorType.Forbidden);
 
             var DTO = new ProductReviewResponseDTO(review, false);
