@@ -4,7 +4,7 @@ using Application.Result;
 using Domain.ProductReviews;
 namespace Application.Interfaces
 {
-    public interface IProductPreviewService
+    public interface IProductReviewService
     {
         Task<Result<ProductReviewResponseDTO>> AddProductReviewAsync(Ulid UserId, Ulid ProductId, ProductReviewCreationAndChangeDTO DTO);
         Task<Result<ProductReviewResponseDTO>> DeleteProductReviewAsync(Ulid UserId, Ulid ReviewId);

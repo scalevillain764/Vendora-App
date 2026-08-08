@@ -4,7 +4,7 @@ using Application.Result;
 using Domain.ProductReviews;
 using Domain.ErrorTypes;
 using Infrastructure.AppDbContexts;
-using IProductReviewService = Application.Interfaces.IProductPreviewService;
+using IProductReviewService = Application.Interfaces.IProductReviewService;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 namespace Application.Services
