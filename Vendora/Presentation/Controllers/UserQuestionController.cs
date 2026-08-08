@@ -26,7 +26,7 @@ namespace Presentation.Controllers
         [HttpDelete]
         [Route("{QuestionId}")]
         public async Task<IActionResult> RemoveUserQuestionAsync(Ulid QuestionId)
-            => ProcessResult(await _service.RemoveQuestionAsync(CurrentUserId, QuestionId));
+            => ProcessResult(await _service.DeleteQuestionAsync(CurrentUserId, QuestionId));
 
         [HttpPut]
         [Route("{QuestionId}")]
