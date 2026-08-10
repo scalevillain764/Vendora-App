@@ -36,17 +36,24 @@ namespace Vendora
             string? GARAGE_REGION = Environment.GetEnvironmentVariable("GARAGE_REGION");
             string? SERVICE_URL = Environment.GetEnvironmentVariable("GARAGE_SERVICE_URL");
 
-            if (GARAGE_API_KEY == null || GARAGE_SECRET_KEY == null || GARAGE_REGION == null || SERVICE_URL == null)
+            if (string.IsNullOrEmpty(GARAGE_API_KEY) ||
+                string.IsNullOrEmpty(GARAGE_SECRET_KEY) ||
+                string.IsNullOrEmpty(GARAGE_REGION) ||
+                string.IsNullOrEmpty(SERVICE_URL))
             {
-                Console.WriteLine("Проверьте данные Garage");
-                return;
+                throw new InvalidOperationException(
+                    $"Ошибки конфигурации Garage:\n" +
+                    $"API_KEY: '{GARAGE_API_KEY}'\n" +
+                    $"SECRET_KEY: '{GARAGE_SECRET_KEY}'\n" +
+                    $"REGION: '{GARAGE_REGION}'\n" +
+                    $"SERVICE_URL: '{SERVICE_URL}'"
+                );
             }
 
             var credentials = new BasicAWSCredentials(GARAGE_API_KEY, GARAGE_SECRET_KEY);
             var region = RegionEndpoint.GetBySystemName(GARAGE_REGION);
             var forcePathStyle = builder.Configuration.GetValue<bool>("S3Config:ForcePathStyle");
             
-
             var s3Config = new AmazonS3Config
             {
                 ServiceURL = SERVICE_URL,
@@ -55,8 +62,9 @@ namespace Vendora
 
             builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(credentials, s3Config)); // adding S3Client
             // amazon s3 client
-            
+
             // services;
+            builder.Services.AddScoped<IS3Service, S3Service>();
             builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
             builder.Services.AddScoped<ISearchService, SearchService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -91,11 +99,27 @@ namespace Vendora
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
 
+            // postgre
+            string? connectionString = null;
+            string? connectionPort = Environment.GetEnvironmentVariable("POSTGRES_PORT");
+            string? connectionDatabase = Environment.GetEnvironmentVariable("POSTGRES_DATABASE");
+            string? connectionUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME");
+            string? connectionPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
 
-            var connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+            if (string.IsNullOrEmpty(connectionPort) ||
+               string.IsNullOrEmpty(connectionDatabase) ||
+               string.IsNullOrEmpty(connectionUsername) ||
+               string.IsNullOrEmpty(connectionPassword))
+                throw new InvalidOperationException(
+                    $"Configuration error in PostgreSQL:\n" +
+                    $"PORT: '{connectionPort ?? "Undefined"}'\n" +
+                    $"DATABASE: '{connectionDatabase ?? "Undefined"}'\n" +
+                    $"USERNAME: '{connectionUsername ?? "Undefined"}'\n" +
+                    $"PASSWORD: '{connectionPassword ?? "Undefined"}'"
+                );
 
-            if (string.IsNullOrEmpty(connectionString))
-                return;
+            connectionString =
+                $"Host=localhost;Port={connectionPort};Database=VendoraAppD{connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
 
             builder.Services.AddDbContext<AppDbContext>(x =>
             {

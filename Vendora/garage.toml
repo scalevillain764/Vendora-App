@@ -1,0 +1,14 @@
+rpc_secret = "ad9239890c9809db3f49b4f4c06709a53f784f3f4722dfe20d288c8c2e4498f4"
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+
+rpc_bind_addr = "[::]:3901"
+replication_factor = 1  
+
+[s3_api]
+api_bind_addr = "[::]:3900"
+s3_region = "garage"
+
+[admin]
+api_bind_addr = "[::]:3903"

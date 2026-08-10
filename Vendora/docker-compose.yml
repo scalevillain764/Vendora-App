@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  web-api:
+    build: . # building
+    ports:
+      - "5000:8080" 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Port=${POSTGRES_PORT};Database=${POSTGRES_DATABASE};Username=${POSTGRES_USERNAME};Password=${POSTGRES_PASSWORD}
+      - GARAGE_API_KEY=${GARAGE_API_KEY}
+      - GARAGE_SECRET_KEY=${GARAGE_SECRET_KEY}
+      - GARAGE_REGION=${GARAGE_REGION}
+      - GARAGE_SERVICE_URL=${GARAGE_SERVICE_URL}
+      - GARAGE_BUCKET_NAME=${GARAGE_BUCKET_NAME}
+      - GARAGE_BASE_URL=${GARAGE_BASE_URL}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # - ConnectionStrings__Redis=cache:6379 // for reddis later
+    depends_on:
+      - db 
+      - garage
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432" 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+
+  garage:
+    image: dxflrs/garage:v2.3.0
+    container_name: garage
+    restart: unless-stopped
+    ports:
+      - "3900:3900" # S3 API
+      - "3901:3901" # RPC (для связи узлов)
+      - "3903:3903" # Admin API
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro # Прокидываем конфиг внутрь
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+
+  # cache:
+  #   image: redis:alpine
+  #   ports:
+  #     - "6379:6379"
+
+volumes:
+  postgres_data:
+  garage_data:
+  garage_meta:

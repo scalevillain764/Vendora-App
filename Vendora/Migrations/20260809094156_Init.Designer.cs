@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Vendora.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260804180456_add_product_reviews")]
-    partial class add_product_reviews
+    [Migration("20260809094156_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -354,6 +354,58 @@ namespace Vendora.Migrations
                     b.ToTable("Transactions");
                 });
 
+            modelBuilder.Entity("Domain.UserQuestions.UserQuestion", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(26)
+                        .HasColumnType("character(26)")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("PhotoUrls")
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasMaxLength(26)
+                        .HasColumnType("character(26)")
+                        .IsFixedLength();
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SellerReply")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StoreId")
+                        .IsRequired()
+                        .HasMaxLength(26)
+                        .HasColumnType("character(26)")
+                        .IsFixedLength();
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(26)
+                        .HasColumnType("character(26)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserQuestions");
+                });
+
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
                     b.Property<string>("Id")
@@ -557,6 +609,33 @@ namespace Vendora.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("Domain.UserQuestions.UserQuestion", b =>
+                {
+                    b.HasOne("Domain.Products.Product", "product")
+                        .WithMany("UserQuestions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Stores.Store", "store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Users.User", "user")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("product");
+
+                    b.Navigation("store");
+
+                    b.Navigation("user");
+                });
+
             modelBuilder.Entity("Domain.Carts.Cart", b =>
                 {
                     b.Navigation("Items");
@@ -576,6 +655,8 @@ namespace Vendora.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("ProductReviews");
+
+                    b.Navigation("UserQuestions");
                 });
 
             modelBuilder.Entity("Domain.Stores.Store", b =>

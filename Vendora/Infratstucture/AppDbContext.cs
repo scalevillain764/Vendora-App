@@ -138,8 +138,33 @@ namespace Infrastructure.AppDbContexts
             {
                 var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-                string? connectionString = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+                string? connectionString = null;
 
+                if (args.Length > 0)
+                    connectionString = args[0]; 
+                else
+                {
+                    string? connectionPort = Environment.GetEnvironmentVariable("POSTGRES_PORT");
+                    string? connectionDatabase = Environment.GetEnvironmentVariable("POSTGRES_DATABASE");
+                    string? connectionUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME");
+                    string? connectionPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+
+                    if (string.IsNullOrEmpty(connectionPort) ||
+                        string.IsNullOrEmpty(connectionDatabase) ||
+                        string.IsNullOrEmpty(connectionUsername) ||
+                        string.IsNullOrEmpty(connectionPassword))
+                        throw new InvalidOperationException(
+                            $"Configuration error in PostgreSQL:\n" +
+                            $"PORT: '{connectionPort ?? "Undefined"}'\n" +
+                            $"DATABASE: '{connectionDatabase ?? "Undefined"}'\n" +
+                            $"USERNAME: '{connectionUsername ?? "Undefined"}'\n" +
+                            $"PASSWORD: '{connectionPassword ?? "Undefined"}'"
+                        );
+
+                    connectionString =
+                        $"Host=localhost;Port={connectionPort};Database=VendoraAppD{connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
+                }
+  
                 if (string.IsNullOrEmpty(connectionString))
                 {
                     throw new InvalidOperationException(
