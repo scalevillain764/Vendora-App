@@ -1,6 +1,7 @@
 ﻿using Application.DTO.PaymentDTO;
 using Application.Result;
 using Domain.ErrorTypes;
+using Domain.OrderItems;
 using Domain.Orders;
 using Domain.Transactions;
 using Domain.Users;
@@ -22,6 +23,27 @@ namespace Application.Services
         }
         private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction)
         {
+            var productIds = order.Items
+            .Select(x => x.ProductId)
+            .Distinct()
+            .ToList();
+
+            var statistics = await _context.ProductStatistics
+                .Where(x => productIds.Contains(x.ProductId))
+                .ToListAsync();
+
+            var statisticsByProductId = statistics
+                .ToDictionary(x => x.ProductId);
+
+            foreach (var item in order.Items)
+            {
+                var stats = statisticsByProductId[item.ProductId];
+
+                stats.SoldQuantity += item.Quantity;
+                stats.Revenue += item.PricePerUnit * item.Quantity;
+                stats.OrdersCount++;
+            }
+
             user.Balance -= order.TotalPrice;
 
             var globalPayments = await _context.OrderItems
@@ -93,7 +115,8 @@ namespace Application.Services
         public async Task<Result<PaymentResponseDTO>> PayFromBalanceAsync(Ulid UserId, Ulid OrderId)
         {
             var order = await _context.Orders
-                .FindAsync(OrderId);
+                .Include(x => x.Items)
+                .FirstOrDefaultAsync(x => x.Id == OrderId);
 
             if (order == null)
             {

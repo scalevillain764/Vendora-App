@@ -4,6 +4,7 @@ using Domain.Users;
 using Domain.UserQuestions;
 using Domain.ProductReviews;
 using Domain.OrderItems;
+using Domain.ProductStatisticsForStores;
 namespace Domain.Products
 {
     public class Product
@@ -125,6 +126,10 @@ namespace Domain.Products
 
         public List<string>? Pictures = null;
         public bool IsDeleted { get; set; }
+
+        // statistiscs
+        public ProductStatistics? Statistics { get; set; } = null!;
+
         private Product() { }
         internal Product(Ulid storeId, int categoryId, 
             string name, string? description, string? shortDescription,

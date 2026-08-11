@@ -15,19 +15,28 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<FavoriteResponseDTO>> AddToFavouriteAsync(Ulid UserId, Ulid ProductId)
+        private async Task<Result<FavoriteResponseDTO>> CheckUserAndProductAsync(Ulid UserId, Ulid ProductId)
         {
             bool userExists = await _context.Users
-                .AnyAsync(x => x.Id == UserId);
+               .AnyAsync(x => x.Id == UserId);
 
             if (!userExists)
-                return Result<FavoriteResponseDTO>.Error("Пользователь не найден", ErrorType.Forbidden);
+                return Result<FavoriteResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
 
             bool productExists = await _context.Products
                 .AnyAsync(x => x.Id == ProductId);
 
             if (!productExists)
                 return Result<FavoriteResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+
+            return Result<FavoriteResponseDTO>.Success(new FavoriteResponseDTO(ProductId, false));
+        }
+        public async Task<Result<FavoriteResponseDTO>> AddToFavouriteAsync(Ulid UserId, Ulid ProductId)
+        {
+            var checkUserAndProduct = await CheckUserAndProductAsync(UserId, ProductId);
+
+            if (!checkUserAndProduct.IsSuccess)
+                return Result<FavoriteResponseDTO>.Error(checkUserAndProduct.ErrorMessage, checkUserAndProduct.ErrorType ?? ErrorType.NotFound);
 
             var favourite = new Favourite(UserId, ProductId);
 
@@ -39,17 +48,10 @@ namespace Application.Services
 
         public async Task<Result<FavoriteResponseDTO>> RemoveFromFavouriteAsync(Ulid UserId, Ulid ProductId)
         {
-            bool userExists = await _context.Users
-                .AnyAsync(x => x.Id == UserId);
+            var checkUserAndProduct = await CheckUserAndProductAsync(UserId, ProductId);
 
-            if (!userExists)
-                return Result<FavoriteResponseDTO>.Error("Пользователь не найден", ErrorType.Forbidden);
-
-            bool productExists = await _context.Products
-                .AnyAsync(x => x.Id == ProductId);
-
-            if (!productExists)
-                return Result<FavoriteResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+            if (!checkUserAndProduct.IsSuccess)
+                return Result<FavoriteResponseDTO>.Error(checkUserAndProduct.ErrorMessage, checkUserAndProduct.ErrorType ?? ErrorType.NotFound);
 
             var favourite = await _context.Favourites
                 .FindAsync(UserId, ProductId);

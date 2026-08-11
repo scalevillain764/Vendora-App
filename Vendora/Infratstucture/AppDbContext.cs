@@ -12,6 +12,7 @@ using Domain.Users;
 using Infrastructure.UlidToStringConverters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Domain.ProductStatisticsForStores;
 using System.Xml;
 namespace Infrastructure.AppDbContexts
 {
@@ -28,6 +29,7 @@ namespace Infrastructure.AppDbContexts
         public DbSet<Favourite> Favourites { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<UserQuestion> UserQuestions { get; set; }
+        public DbSet<ProductStatistics> ProductStatistics { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
@@ -112,13 +114,20 @@ namespace Infrastructure.AppDbContexts
                 .WithMany(p => p.ProductReviews)
                 .HasForeignKey(pr => pr.ProductId);
 
+            // user question
             modelBuilder.Entity<UserQuestion>()
                 .HasOne(uq => uq.product)
                 .WithMany(p => p.UserQuestions)
                 .HasForeignKey(uq => uq.ProductId);
 
+            // product statistics
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Statistics)
+                .WithOne(s => s.Product)
+                .HasForeignKey<ProductStatistics>(s => s.ProductId);
+
             // remove auto-increment
-            foreach(var dbSet in modelBuilder.Model.GetEntityTypes())
+            foreach (var dbSet in modelBuilder.Model.GetEntityTypes())
             {
                 var primary_key = dbSet.FindPrimaryKey();
                 if(primary_key != null)

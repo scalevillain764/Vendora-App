@@ -63,7 +63,6 @@ namespace Application.Services
             _context.CartItems.Remove(cartItem);
 
             await _context.SaveChangesAsync();
-
             return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
 
@@ -80,7 +79,7 @@ namespace Application.Services
             if (cartItem == null || cart == null)
                 return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
-            if (cartItem.Quantity > 1)
+            if (cartItem.Quantity > 0)
             {
                 cartItem.Quantity--;
                 await _context.SaveChangesAsync();

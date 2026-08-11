@@ -19,7 +19,7 @@ namespace Application.Services
             string? API_BASE_URL = Environment.GetEnvironmentVariable("EXCHANGE_RATES_BASE_URL");
             string? API_ENDPOINT_SUFFIX = Environment.GetEnvironmentVariable("EXCHANGE_RATES_ENDPOINT_SUFFIX");
 
-            if (API_KEY == null || API_BASE_URL == null || API_ENDPOINT_SUFFIX == null)
+            if (string.IsNullOrEmpty(API_KEY) || string.IsNullOrEmpty(API_BASE_URL)|| string.IsNullOrEmpty(API_ENDPOINT_SUFFIX))
                 return Result<ExchangeUserResponseDTO>.Error("Проверьте целостность данных", ErrorType.Validation);
 
             string CONNECTION_URL = $"{API_BASE_URL}{API_KEY}{API_ENDPOINT_SUFFIX}";

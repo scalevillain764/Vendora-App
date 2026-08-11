@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Result;
 using Domain.ErrorTypes;
 using Domain.Products;
+using Domain.ProductStatisticsForStores;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ namespace Application.Services
         {
             var product = await _context.Products
                 .Include(x => x.ProductReviews)
+                .Include(x => x.Store)
                 .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
 
             if (product == null)
@@ -46,6 +48,9 @@ namespace Application.Services
             var newProduct = new Product
                 (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
                 DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
+
+            var productStatistics = new ProductStatistics(newProduct.Id);
+            newProduct.Statistics = productStatistics;
 
             _context.Products.Add(newProduct);
             await _context.SaveChangesAsync(); 
@@ -166,7 +171,7 @@ namespace Application.Services
         }
         // pics
 
-        public async Task<Result<ProductResponseDTO>> GetProduct(Ulid ProductId)
+        public async Task<Result<ProductResponseDTO>> GetProductAsync(Ulid ProductId)
         {
             var product = await _context.Products
                 .FindAsync(ProductId);
