@@ -163,7 +163,8 @@ namespace Application.Services
         public async Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO)
         {
             var user = await _context.Users
-               .FindAsync(UserId);
+               .IgnoreQueryFilters()
+               .FirstOrDefaultAsync(x => x.Id == UserId);
 
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -179,9 +180,15 @@ namespace Application.Services
 
             user.Login = DTO.Login;
 
+            int ordersMade = await _context.Orders
+                .CountAsync(x => x.UserId == UserId);
+
+            int reviewsLeft = await _context.ProductReviews
+                .CountAsync(x => x.UserId == UserId);
+
             await _context.SaveChangesAsync();
 
-            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
         }
     }
 }

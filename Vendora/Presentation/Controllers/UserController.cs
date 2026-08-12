@@ -20,6 +20,10 @@ namespace Presentation.Controllers
         public async Task<IActionResult> GetMeAsync()
             => ProcessResult(await _userService.GetMeAsync(CurrentUserId));
 
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMyAccountAsync()
+            => ProcessResult(await _userService.DeleteYourMyAsync(CurrentUserId));
+
         [HttpGet]
         [Route("{UserId}")]
         public async Task<IActionResult> GetUserAsync(Ulid UserId)

@@ -40,6 +40,16 @@ namespace Infrastructure.AppDbContexts
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // query filters
+            modelBuilder.Entity<User>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
+            modelBuilder.Entity<Product>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
+            modelBuilder.Entity<Store>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
             // user
             modelBuilder.Entity<User>()
                 .HasQueryFilter(x => !x.IsDeleted);
@@ -113,6 +123,11 @@ namespace Infrastructure.AppDbContexts
                 .HasOne(pr => pr.product)
                 .WithMany(p => p.ProductReviews)
                 .HasForeignKey(pr => pr.ProductId);
+
+            modelBuilder.Entity<ProductReview>()
+                .HasOne(pr => pr.user)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(pr => pr.UserId);
 
             // user question
             modelBuilder.Entity<UserQuestion>()

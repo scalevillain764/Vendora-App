@@ -5,6 +5,7 @@ namespace Application.Interfaces
 {
     public interface IUserService
     {
+        Task<Result<string>> DeleteYourMyAsync(Ulid UserId);
         Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId);
         Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId);
         Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO);

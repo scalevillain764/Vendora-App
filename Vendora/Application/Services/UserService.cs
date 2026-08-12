@@ -30,19 +30,48 @@ namespace Application.Services
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
 
-            action(user); 
+            action(user);
+
+            int ordersMade = await _context.Orders
+                .CountAsync(x => x.UserId == UserId);
+
+            int reviewsLeft = await _context.ProductReviews
+                .CountAsync(x => x.UserId == UserId);
 
             await _context.SaveChangesAsync();
 
-            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user));
+            return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
         }
+        public async Task<Result<string>> DeleteMyAccountAsync(Ulid UserId)
+        {
+            var user = await _context.Users
+                .Include(x => x.Store)
+                .FirstOrDefaultAsync(x => x.Id == UserId);
 
+            if (user == null)
+                return Result<string>.Error("Что-то пошло не так", ErrorType.NotFound);
+
+            if (user.Store != null)
+                user.Store.IsDeleted = true;
+
+            user.IsDeleted = true;
+
+            await _context.SaveChangesAsync();
+
+            return Result<string>.Success("OK");
+        }
         public async Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId) // just get main data about user
         {
             var user = await _context.Users
                 .FindAsync(UserId);
 
-            return user != null ? Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user))
+            int ordersMade = await _context.Orders
+                .CountAsync(x => x.UserId == UserId);
+
+            int reviewsLeft = await _context.ProductReviews
+                .CountAsync(x => x.UserId == UserId);
+
+            return user != null ? Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft))
                 : Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
         }
 

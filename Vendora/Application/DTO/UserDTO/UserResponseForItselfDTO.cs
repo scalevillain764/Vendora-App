@@ -9,12 +9,14 @@ namespace Application.DTO.UserDTO
         string? AvatarUrl,
         string? Email,
         string? Phone,
-        decimal Balance
+        decimal Balance,
+        int OrdersMade,
+        int ReviewsLeft
     )
     {
-        public UserResponseForItselfDTO(User user) :
+        public UserResponseForItselfDTO(User user, int productsBought, int reviewsLeft) :
             this(user.ProfileName, user.FirstName, user.LastName, user.UserGender.ToString(),
-                user.AvatarUrl, user.Email, user.Phone, user.Balance)
+                user.AvatarUrl, user.Email, user.Phone, user.Balance, productsBought, reviewsLeft)
         { }
     };
 }
