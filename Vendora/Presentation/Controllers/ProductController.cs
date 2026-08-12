@@ -56,9 +56,14 @@ namespace Presentation.Controllers
           => ProcessResult(await _productService.ChangeProductShortDescriptionAsync(CurrentUserId, ProductId, DTO));
 
         [HttpGet]
+        [Route("store/{StoreId}")]
+        public async Task<IActionResult> GetProductsFromStoreAsync(Ulid StoreId)
+            => ProcessResult(await _productService.GetProductsFromStoreAsync(CurrentUserId, StoreId));
+
+        [HttpGet]
         [Route("{ProductId}")]
         public async Task<IActionResult> GetProductByIdAsync(Ulid ProductId)
-            => ProcessResult(await _productService.GetProduct(ProductId));
+            => ProcessResult(await _productService.GetProductAsync(CurrentUserId, ProductId));
 
         [HttpPatch]
         [Route("preview/change/{ProductId}")]
