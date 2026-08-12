@@ -13,15 +13,17 @@ namespace Application.DTO.ProductDTO.StoreDTO
          string? PreviewUrl,
          long Article,
          double Average_rating
+         bool IsOwner
     )
     {
-        public ProductResponseDTO(Product pr) :
+        public ProductResponseDTO(Product pr, bool isOwner) :
             this(pr.Id, pr.StoreId,
                 pr.Category.ToString(),
                 pr.Name, pr.Description,
                 pr.Price, pr.Quantity,
                 pr.PreviewUrl, pr.Article,
-                pr.ProductReviews.Average(x => x.Rating)
+                pr.ProductReviews.Average(x => x.Rating),
+                isOwner
             )
         { }
     }

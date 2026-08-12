@@ -24,7 +24,6 @@ namespace Application.Services
         {
             var product = await _context.Products
                 .Include(x => x.ProductReviews)
-                .Include(x => x.Store)
                 .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
 
             if (product == null)
@@ -33,7 +32,7 @@ namespace Application.Services
             action(product);
 
             await _context.SaveChangesAsync();
-            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product));
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
         public async Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO)
         {
@@ -43,7 +42,7 @@ namespace Application.Services
                 .FirstOrDefaultAsync();
 
             if (storeId == default)
-                return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden);
+                return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden); 
 
             var newProduct = new Product
                 (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
@@ -55,52 +54,19 @@ namespace Application.Services
             _context.Products.Add(newProduct);
             await _context.SaveChangesAsync(); 
 
-            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(newProduct));
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(newProduct, true));
         }
-
-        public async Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId)
-        {
-            var storeId = await _context.Stores
-                .Where(x => x.SellerId == UserId)
-                .Select(x => x.Id)
-                .FirstOrDefaultAsync();
-
-            if (storeId == default)
-                return Result<ProductResponseDTO>.Error("Магазин не найден", ErrorType.NotFound);
-
-            var product = await _context.Products
-                .Include(x => x.ProductReviews)
-                .FirstOrDefaultAsync(p => p.Id == ProductId 
-                    && p.StoreId == storeId);
-
-            if (product == null)
-                return Result<ProductResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
-
-            var productDTO = new ProductResponseDTO(product);
-
-            _context.Products.Remove(product);
-
-            await _context.SaveChangesAsync();
-            return Result<ProductResponseDTO>.Success(productDTO);
-        }
-
+        public Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId)
+            => ChangeProductProperty(UserId, ProductId, x => x.IsDeleted = true);
+        
         // pics
         public Task<Result<ProductResponseDTO>> AddPicturesToProductAsync(Ulid UserId, Ulid ProductId, ProductAddPicturesDTO DTO)
             => ChangeProductProperty(UserId, ProductId, x => x.Pictures.AddRange(DTO.pictures)); // load new pics for product, after creating e.g.
 
         public async Task<Result<ProductResponseDTO>> RemovePictureFromProduct(Ulid UserId, Ulid ProductId, ProductRemovePictureDTO DTO) // rempve picture from product, after creaing e.g. 
         {
-            var storeId = await _context.Stores
-                .Where(x => x.SellerId == UserId)
-                .Select(x => x.Id)
-                .FirstOrDefaultAsync();
-
-            if (storeId == default)
-                return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden);
-
             var product = await _context.Products
-                .FirstOrDefaultAsync(x => x.Id == ProductId
-                && x.StoreId == storeId);
+                .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
 
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -121,8 +87,19 @@ namespace Application.Services
             product.Pictures.Remove(DTO.fileURL);
             
             await _context.SaveChangesAsync();
-            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product));
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
+
+        public async Task<Result<List<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, Ulid StoreId)
+        {
+            var rez = await _context.Products
+                    .Where(x => x.StoreId == StoreId)
+                    .Select(x => new ProductResponseDTO(x, x.Store.SellerId == UserId))
+                    .ToListAsync();
+
+            return Result<List<ProductResponseDTO>>.Success(rez);
+        }
+                
 
         public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile file) // change preview after creating e.g
         {
@@ -171,14 +148,17 @@ namespace Application.Services
         }
         // pics
 
-        public async Task<Result<ProductResponseDTO>> GetProductAsync(Ulid ProductId)
+        public async Task<Result<ProductResponseDTO>> GetProductAsync(Ulid UserId, Ulid ProductId)
         {
             var product = await _context.Products
-                .FindAsync(ProductId);
+                .Include(x => x.Store)
+                .FirstOrDefaultAsync(x => x.Id == ProductId);
 
-            return product != null
-                ? Result<ProductResponseDTO>.Success(new ProductResponseDTO(product))
-                : Result<ProductResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+            if (product == null)
+                return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            return Result<ProductResponseDTO>.Success(
+                new ProductResponseDTO(product, product.Store.SellerId == UserId));
         }
 
         public Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO)
