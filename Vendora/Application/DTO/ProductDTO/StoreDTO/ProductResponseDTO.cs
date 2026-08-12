@@ -12,7 +12,7 @@ namespace Application.DTO.ProductDTO.StoreDTO
          int Quantity,
          string? PreviewUrl,
          long Article,
-         double Average_rating
+         double Average_rating,
          bool IsOwner
     )
     {
