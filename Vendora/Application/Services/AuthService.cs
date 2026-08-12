@@ -99,7 +99,11 @@ namespace Application.Services
                 new Claim(ClaimTypes.Name, UserName)
             };
 
-            string decoded_key = Environment.GetEnvironmentVariable("SECRET_KEY");
+            string? decoded_key = Environment.GetEnvironmentVariable("SECRET_KEY");
+
+            if (string.IsNullOrEmpty(decoded_key))
+                throw new KeyNotFoundException("Secret key not found");    
+
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(decoded_key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
@@ -116,7 +120,7 @@ namespace Application.Services
 
         public async Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId)
         {
-            string existingRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+            string? existingRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(existingRefreshToken))
                 return Result<AuthResponseDTO>.Error("Куки пусты", ErrorType.Unauthorized);
