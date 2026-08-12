@@ -70,6 +70,9 @@ namespace Infrastructure.AppDbContexts
                 .HasForeignKey(o => o.UserId);
 
             // cart
+            modelBuilder.Entity<Cart>()
+                .HasKey(x => x.UserId);
+
             modelBuilder.Entity<Cart>() // cart with cart items
                  .HasMany(c => c.Items)
                  .WithOne(ct => ct.Cart)
@@ -136,6 +139,9 @@ namespace Infrastructure.AppDbContexts
                 .HasForeignKey(uq => uq.ProductId);
 
             // product statistics
+            modelBuilder.Entity<ProductStatistics>()
+                .HasKey(x => x.ProductId);
+
             modelBuilder.Entity<Product>()
                 .HasOne(p => p.Statistics)
                 .WithOne(s => s.Product)

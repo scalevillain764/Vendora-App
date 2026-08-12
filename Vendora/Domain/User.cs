@@ -48,6 +48,7 @@ namespace Domain.Users
             Phone = phone;
             IsDeleted = false;
             Balance = 0;
+            Cart = new Cart(Id);
         }
 
         public User(string login, string passwordHash)

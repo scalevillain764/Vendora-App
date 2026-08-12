@@ -22,7 +22,7 @@ namespace Presentation.Controllers
 
         [HttpDelete]
         public async Task<IActionResult> DeleteMyAccountAsync()
-            => ProcessResult(await _userService.DeleteYourMyAsync(CurrentUserId));
+            => ProcessResult(await _userService.DeleteMyAccountAsync(CurrentUserId));
 
         [HttpGet]
         [Route("{UserId}")]

@@ -129,7 +129,6 @@ namespace Domain.Products
 
         // statistiscs
         public ProductStatistics? Statistics { get; set; } = null!;
-
         private Product() { }
         internal Product(Ulid storeId, int categoryId, 
             string name, string? description, string? shortDescription,
@@ -148,6 +147,7 @@ namespace Domain.Products
             PreviewUrl = previewUrl;
             IsDeleted = false;
             Pictures = pictures;
+            Statistics = new ProductStatistics(Id);
         }
     }
 }

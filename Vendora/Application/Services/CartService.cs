@@ -132,7 +132,7 @@ namespace Application.Services
             if (product.Quantity == 0)
                 return Result<CartResponseDTO>.Error("Товара нет в наличии", ErrorType.Conflict);
 
-            cart.Items.Add(new CartItem(cart.Id, ProductId, product.Price)
+            cart.Items.Add(new CartItem(cart.UserId, ProductId, product.Price)
             {
                 Product = product 
             });

@@ -8,6 +8,6 @@ namespace Vendora.Application.DTO.ProductDTO.StatisticsDTO
         )
     { 
         public ProductStatisticsDTO(ProductStatistics statistics) :
-            this(statistics.SoldQuality, statistics.OrdersCount, statistics.Revenue) { }
+            this(statistics.SoldQuantity, statistics.OrdersCount, statistics.Revenue) { }
     }
 }

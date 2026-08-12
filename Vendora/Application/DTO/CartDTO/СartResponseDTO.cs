@@ -2,7 +2,7 @@
 using Domain.Carts;
 namespace Application.DTO.CartDTO
 {
-    public record CartResponseDTO(Ulid Id,
+    public record CartResponseDTO(
         Ulid UserId,
         List<ProductCartCardResponseDTO> cartItems,
         int TotalQuantity,
@@ -10,8 +10,7 @@ namespace Application.DTO.CartDTO
         )
     {
         public CartResponseDTO(Cart cart) :
-            this(cart.Id,
-                cart.UserId,
+            this(cart.UserId,
                 cart.Items.Select(x => new ProductCartCardResponseDTO(x)).ToList(),
                 cart.Items.Sum(x => x.Quantity),
                 cart.Items.Sum(x => x.Quantity * x.PricePerUnit))
