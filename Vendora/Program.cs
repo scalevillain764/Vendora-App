@@ -7,14 +7,17 @@ using Application.Result;
 using Application.Services;
 using Domain.Users;
 using dotenv.net;
+using FluentValidation;
+using FluentValidation.Validators;
 using Infrastructure.AppDbContexts;
-using Presentation.ExceptionMiddlewares;
-
 // microsoft
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.IdentityModel.Tokens;
+using Presentation.ExceptionMiddlewares;
+using SharpGrip.FluentValidation.AutoValidation;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -29,6 +32,10 @@ namespace Vendora
 
             // Add services to the container.
             builder.Services.AddRazorPages();
+
+            // validation
+            builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
             // amazon s3 client
             string? GARAGE_API_KEY = Environment.GetEnvironmentVariable("GARAGE_API_KEY");
@@ -75,6 +82,9 @@ namespace Vendora
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IStoreService, StoreService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
+            builder.Services.AddScoped<IUserQuestionService, UserQuestionService>();
+            builder.Services.AddScoped<IProductForStoreStatisticsService, ProductForStoreStatisticsService>();
 
             builder.Services.AddAuthentication(options =>
             {

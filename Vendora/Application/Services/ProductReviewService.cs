@@ -37,7 +37,10 @@ namespace Application.Services
                 .Select(x => x.Order)
                 .FirstOrDefaultAsync(x => x.UserId == UserId);
 
-            if (order == null || order.Status != Domain.Orders.Order.OrderStatus.Completed)
+            if (order == null || order.Status == Domain.Orders.Order.OrderStatus.Pending 
+                        ||  order.Status == Domain.Orders.Order.OrderStatus.PaymentFailed
+                        || order.Status == Domain.Orders.Order.OrderStatus.Refunded
+                        || order.Status == Domain.Orders.Order.OrderStatus.InDelivery)
                 return Result<ProductReviewResponseDTO>.Error("Сначала приорбретите товар", ErrorType.Forbidden);
 
             var review = new ProductReview(UserId, ProductId, storeId.Value, DTO.ReviewText, DTO.Rating, DTO.PhotoUrl);

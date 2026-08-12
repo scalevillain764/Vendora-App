@@ -15,6 +15,7 @@ namespace Presentation.Controllers
 
         [HttpPost]
         [Route("yookassa/webhook")]
+        [AllowAnonymous]
         public async Task<IActionResult> ConfirmYooKassaWebhook(PaymentYooKassaRequestDTO DTO)
             => ProcessResult(await _paymentService.ConfirmYooKassaPaymentAsync(CurrentUserId, DTO));
 

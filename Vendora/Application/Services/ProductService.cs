@@ -48,9 +48,6 @@ namespace Application.Services
                 (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
                 DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
 
-            var productStatistics = new ProductStatistics(newProduct.Id);
-            newProduct.Statistics = productStatistics;
-
             _context.Products.Add(newProduct);
             await _context.SaveChangesAsync(); 
 

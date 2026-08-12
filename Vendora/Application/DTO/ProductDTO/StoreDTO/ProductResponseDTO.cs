@@ -22,7 +22,7 @@ namespace Application.DTO.ProductDTO.StoreDTO
                 pr.Name, pr.Description,
                 pr.Price, pr.Quantity,
                 pr.PreviewUrl, pr.Article,
-                pr.ProductReviews.Average(x => x.Rating),
+                pr.ProductReviews.Count != 0 ? pr.ProductReviews.Average(x => x.Rating) : 0,
                 isOwner
             )
         { }

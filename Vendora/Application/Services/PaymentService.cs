@@ -23,6 +23,9 @@ namespace Application.Services
         }
         private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction)
         {
+            if (moneyTransaction.Status != Transaction.PaymentStatus.Success)
+                return false;
+
             var productIds = order.Items
             .Select(x => x.ProductId)
             .Distinct()
@@ -99,6 +102,9 @@ namespace Application.Services
 
             if (user == null)
                 return Result<PaymentResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
+
+            if (moneyTransaction.Order.UserId != UserId)
+                return Result<PaymentResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
 
             using var transaction = await _context.Database.BeginTransactionAsync();
            

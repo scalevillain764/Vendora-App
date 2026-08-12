@@ -27,6 +27,7 @@ namespace Domain.OrderItems
         internal OrderItem(Ulid orderId, CartItem item, Ulid sellerId)
         {
             Id = Ulid.NewUlid();
+            OrderId = orderId;
             SellerId = sellerId;
             OrderId = orderId;
             ProductId = item.ProductId;

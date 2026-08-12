@@ -81,7 +81,7 @@ namespace Application.Services
                 return Result<List<ProductCardDTO>>.Error("Нет избранных товаров", ErrorType.Validation);
 
             var rez = await _context.Favourites
-                .Where(x => x.UserId == x.UserId)
+                .Where(x => x.UserId == UserId)
                     .Include(x => x.Product)
                         .Select(x => new ProductCardDTO(x.Product, true))
                 .ToListAsync();

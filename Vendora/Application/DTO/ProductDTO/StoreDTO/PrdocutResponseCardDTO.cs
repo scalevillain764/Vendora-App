@@ -21,7 +21,7 @@ namespace Application.DTO.ProductDTO.StoreDTO
                 product.ShortDescription, 
                 product.PreviewUrl, 
                 isFavourite,
-                product.ProductReviews.Average(x => x.Rating),
+                product.ProductReviews.Count != 0 ? product.ProductReviews.Average(x => x.Rating) : 0,
                 product.ProductReviews.Count) { }
     }
 }

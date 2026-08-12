@@ -81,7 +81,7 @@ namespace Application.Services
             if (product == null)
                 return Result<List<UserQuestionResponseDTO>>.Error("Товар не найден", ErrorType.NotFound);
 
-            bool canReply = product.Store.SellerId == ProductId;
+            bool canReply = product.Store.SellerId == UserId;
 
             var rez = await _context.UserQuestions
                 .Where(x => x.ProductId == ProductId)

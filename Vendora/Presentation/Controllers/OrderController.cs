@@ -18,15 +18,5 @@ namespace Presentation.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePendingOrderAsync()
             => ProcessResult(await _orderService.CreatePendingOrderAsync(CurrentUserId));
-
-        [HttpPost]
-        [Route("success/{OrderId}")]
-        public async Task<IActionResult> SuccessOrderAsync(Ulid OrderId)
-            => ProcessResult(await _orderService.ChangeOrderStatusToSuccessAsync(OrderId));
-
-        [HttpPost]
-        [Route("fail/{OrderId}")]
-        public async Task<IActionResult> FailOrderAsync(Ulid OrderId)
-            => ProcessResult(await _orderService.ChangeOrderStatusToFailAsync(OrderId));
     }
 }
