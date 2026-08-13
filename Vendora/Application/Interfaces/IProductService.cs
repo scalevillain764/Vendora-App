@@ -2,7 +2,7 @@
 using Application.DTO.ProductDTO.StoreDTO;
 using Application.Result;
 using Domain.Products;
-using Vendora.Application.DTO.ProductDTO.StatisticsDTO;
+using Application.DTO.ProductDTO.StatisticsDTO;
 namespace Application.Interfaces
 {
     public interface IProductService

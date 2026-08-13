@@ -46,7 +46,7 @@ namespace Application.Services
                 return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden); 
 
             var newProduct = new Product
-                (storeId, DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
+                (storeId, (int)DTO.Category, DTO.Name, DTO.Description, DTO.ShortDescription, DTO.Price, 
                 DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
 
             _context.Products.Add(newProduct);

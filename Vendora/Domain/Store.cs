@@ -19,6 +19,7 @@ namespace Domain.Stores
 
         public Store(Ulid sellerId, string name, string? description, string? urlAvatar)
         {
+            Id = Ulid.NewUlid();
             SellerId = sellerId;
             Name = name;
             Description = description;

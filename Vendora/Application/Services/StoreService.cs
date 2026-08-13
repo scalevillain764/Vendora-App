@@ -1,5 +1,4 @@
-﻿
- using Application.DTO.StoreDTO;
+﻿using Application.DTO.StoreDTO;
 using Application.DTO.UserDTO;
 using Application.Interfaces;
 using Application.Result;

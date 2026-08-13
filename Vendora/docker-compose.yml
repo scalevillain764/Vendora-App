@@ -27,20 +27,26 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       # - ConnectionStrings__Redis=cache:6379 // for reddis later
     depends_on:
-      - db 
-      - garage
+     garage:
+        condition: service_started
+     db:
+        condition: service_healthy
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      # Внимание на левую часть: имена переменных изменены под стандарт Postgres!
+      POSTGRES_DB: ${POSTGRES_DATABASE}      
+      POSTGRES_USER: ${POSTGRES_USERNAME}    
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432" 
     volumes:
       - postgres_data:/var/lib/postgresql/data 
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
   garage:
     image: dxflrs/garage:v2.3.0
     container_name: garage

@@ -1,4 +1,5 @@
 ﻿using Application.DTO.ProductDTO.StoreDTO;
+using Domain.Products;
 using FluentValidation;
 namespace Application.Validators.ProductDTOValidators
 {

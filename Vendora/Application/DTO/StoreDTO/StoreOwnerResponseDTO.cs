@@ -1,7 +1,8 @@
 ﻿using Domain.Stores;
 namespace Application.DTO.StoreDTO
 {
-    public record StoreOwnerResponseDTO(
+    public record StoreOwnerResponseDTO( 
+        Ulid StoreId,
         string Name,
         string? Description,
         string? UrlAvatar,
@@ -9,6 +10,6 @@ namespace Application.DTO.StoreDTO
     )
     {
         public StoreOwnerResponseDTO(Store store)
-            : this(store.Name, store.Description, store.UrlAvatar, store.Products.Count) { }
+            : this(store.Id, store.Name, store.Description, store.UrlAvatar, store.Products.Count) { }
     }
 }

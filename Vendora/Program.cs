@@ -86,7 +86,7 @@ namespace Vendora
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
             builder.Services.AddScoped<IUserQuestionService, UserQuestionService>();
-            builder.Services.AddScoped<IProductForStoreStatisticsService, ProductStatisticsService>();
+            builder.Services.AddScoped<IProductStatisticsService, ProductStatisticsService>();
 
             builder.Services.AddAuthentication(options =>
             {
@@ -187,6 +187,21 @@ namespace Vendora
             // middleware
 
             app.MapControllers();
+
+           /* using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<AppDbContext>(); // ”кажите им€ вашего DbContext
+                    context.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "ќшибка при применении миграций в базу данных.");
+                }
+            }*/
 
             app.Run();
         }
