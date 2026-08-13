@@ -1,8 +1,8 @@
 ﻿using Application.Result;
-using Vendora.Application.DTO.ProductDTO.StatisticsDTO;
+using Application.DTO.ProductDTO.StatisticsDTO;
 namespace Application.Interfaces
 {
-    public interface IProductForStoreStatisticsService {
+    public interface IProductStatisticsService {
         Task<Result<ProductStatisticsDTO>> GetProductStatisticsAsync(Ulid UserId, Ulid StoreId, Ulid ProductId);
     }
 }

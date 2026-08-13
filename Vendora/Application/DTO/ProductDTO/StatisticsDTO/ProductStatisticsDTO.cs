@@ -1,5 +1,5 @@
 ﻿using Domain.ProductStatisticsForStores;
-namespace Vendora.Application.DTO.ProductDTO.StatisticsDTO
+namespace Application.DTO.ProductDTO.StatisticsDTO
 {
     public record ProductStatisticsDTO(
         int SoldQuality,

@@ -26,7 +26,7 @@ namespace Presentation.Controllers
         [HttpPatch]
         [Route("profile_picture")]
         public async Task<IActionResult> ChangeStoreProfilePictureAsync(IFormFile? file)
-            => ProcessResult(await _storeService.ChangeStoreAvatarAsync(CurrentUserId, file);
+            => ProcessResult(await _storeService.ChangeStoreAvatarAsync(CurrentUserId, file));
 
         [HttpGet]
         public async Task<IActionResult> GetMyStoreAsync()

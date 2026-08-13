@@ -86,7 +86,7 @@ namespace Vendora
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
             builder.Services.AddScoped<IUserQuestionService, UserQuestionService>();
-            builder.Services.AddScoped<IProductForStoreStatisticsService, ProductForStoreStatisticsService>();
+            builder.Services.AddScoped<IProductForStoreStatisticsService, ProductStatisticsService>();
 
             builder.Services.AddAuthentication(options =>
             {
