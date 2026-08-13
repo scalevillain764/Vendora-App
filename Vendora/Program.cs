@@ -10,7 +10,9 @@ using dotenv.net;
 using FluentValidation;
 using FluentValidation.Validators;
 using Infrastructure.AppDbContexts;
+
 // microsoft
+using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -94,7 +96,7 @@ namespace Vendora
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-
+                    
                     var sym_key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("SECRET_KEY")));
                     options.TokenValidationParameters.IssuerSigningKey = sym_key;
 
@@ -129,7 +131,7 @@ namespace Vendora
                 );
 
             connectionString =
-                $"Host=localhost;Port={connectionPort};Database=VendoraAppD{connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
+                $"Host=localhost;Port={connectionPort};Database={connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
 
             builder.Services.AddDbContext<AppDbContext>(x =>
             {
@@ -141,7 +143,25 @@ namespace Vendora
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            /* builder.Services.AddSwaggerGen();*/
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header
+                });
+
+                options.AddSecurityRequirement(document =>
+                    new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference("Bearer", document)] =
+                            new List<string>()
+                    });
+            });
 
             var app = builder.Build();
 

@@ -15,6 +15,19 @@ namespace Presentation.Controllers
             _storeService = storeService;
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> RemoveMyStoreAsync()
+            => ProcessResult(await _storeService.RemoveMyStoreAsync(CurrentUserId));
+
+        [HttpPost]
+        public async Task<IActionResult> CreateStoreAsync([FromBody] StoreOwnerCreateDTO DTO)
+            => ProcessResult(await _storeService.CreateStoreAsync(CurrentUserId, DTO));
+
+        [HttpPatch]
+        [Route("profile_picture")]
+        public async Task<IActionResult> ChangeStoreProfilePictureAsync(IFormFile? file)
+            => ProcessResult(await _storeService.ChangeStoreAvatarAsync(CurrentUserId, file);
+
         [HttpGet]
         public async Task<IActionResult> GetMyStoreAsync()
             => ProcessResult(await _storeService.GetMyStoreAsync(CurrentUserId));

@@ -192,7 +192,7 @@ namespace Infrastructure.AppDbContexts
                         );
 
                     connectionString =
-                        $"Host=localhost;Port={connectionPort};Database=VendoraAppD{connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
+                        $"Host=localhost;Port={connectionPort};Database={connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
                 }
   
                 if (string.IsNullOrEmpty(connectionString))

@@ -21,6 +21,22 @@ namespace Application.Services
             _context = context;
             _S3Service = S3Service;
         }
+
+        public async Task<Result<string>> RemoveMyStoreAsync(Ulid UserId)
+        {
+            var store = await _context.Stores
+                .FirstOrDefaultAsync(x => x.SellerId == UserId);
+
+            if (store == null)
+                return Result<string>.Error("Магазин не найден", ErrorType.NotFound);
+
+            store.IsDeleted = true;
+
+            await _context.SaveChangesAsync();
+            return Result<string>.Success("OK");
+
+        }
+
         private async Task<Result<StoreOwnerResponseDTO>> ChangeStorePropertyAsync(Ulid UserId, Action<Store> action)
         {
             var store = await _context.Stores
@@ -75,34 +91,46 @@ namespace Application.Services
 
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid UserId, StoreChangeNameDTO DTO) 
             => ChangeStorePropertyAsync(UserId, x => x.Name = DTO.Name);
+        
         // pics
-        public async Task<Result<StoreOwnerResponseDTO>> ChangeStoreAvatarAsync(Ulid UserId, IFormFile file)
+        public async Task<Result<StoreOwnerResponseDTO>> ChangeStoreAvatarAsync(Ulid UserId, IFormFile? file)
         {
-            var loadPicture = await _S3Service.UploadPhotoAsync(file);
-            if (!loadPicture.IsSuccess)
-                return Result<StoreOwnerResponseDTO>.Error(loadPicture.ErrorMessage,
-                    loadPicture.ErrorType ?? ErrorType.Conflict);
+            var store = await _context.Stores
+                .FirstOrDefaultAsync(x => x.SellerId == UserId);
 
-            string NewUrl = loadPicture.data;
-            string? PrevUrl = null;
+            if (store == null)
+                return Result<StoreOwnerResponseDTO>.Error("Магазин не найден", ErrorType.NotFound);
 
-            var updateStoreAvatarUrl = await ChangeStorePropertyAsync(UserId, x =>
+            string? old_url = store.UrlAvatar;
+            string? new_url = null;
+
+            if (file == null)
             {
-                PrevUrl = x.UrlAvatar;
-                x.UrlAvatar = NewUrl;
-            });
-
-            if (!updateStoreAvatarUrl.IsSuccess)
+                if (store.UrlAvatar != null)
+                    store.UrlAvatar = null;
+            }    
+            else
             {
-                await _S3Service.RemovePhotoByUrlAsync(NewUrl);
-                return Result<StoreOwnerResponseDTO>.Error(updateStoreAvatarUrl.ErrorMessage,
-                   updateStoreAvatarUrl.ErrorType ?? ErrorType.Conflict);
+                var loadPicture = await _S3Service.UploadPhotoAsync(file);
+                if (!loadPicture.IsSuccess)
+                    return Result<StoreOwnerResponseDTO>.Error(loadPicture.ErrorMessage, loadPicture.ErrorType ?? ErrorType.Conflict);
+                new_url = loadPicture.data;
+                store.UrlAvatar = new_url;
             }
 
-            if (!string.IsNullOrEmpty(PrevUrl))
-                await _S3Service.RemovePhotoByUrlAsync(PrevUrl);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                if (new_url != null)
+                    await _S3Service.RemovePhotoByUrlAsync(new_url);
+                throw;
+            }
 
-            return Result<StoreOwnerResponseDTO>.Success(updateStoreAvatarUrl.data);
+            await _S3Service.RemovePhotoByUrlAsync(old_url);
+            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
         }
 
         public async Task<Result<StoreOwnerResponseDTO>> RemoveStoreAvatarAsync(Ulid UserId, StoreRemoveAvatarUrlDTO DTO)
