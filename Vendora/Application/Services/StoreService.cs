@@ -133,24 +133,6 @@ namespace Application.Services
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
         }
 
-        public async Task<Result<StoreOwnerResponseDTO>> RemoveStoreAvatarAsync(Ulid UserId, StoreRemoveAvatarUrlDTO DTO)
-        {
-            var updateStoreAvatarUrl = await ChangeStorePropertyAsync(UserId, x => x.UrlAvatar = null);
-
-            if(!updateStoreAvatarUrl.IsSuccess)
-                return Result<StoreOwnerResponseDTO>.Error(updateStoreAvatarUrl.ErrorMessage, updateStoreAvatarUrl.ErrorType ?? ErrorType.Conflict);
-
-            var removePhotoFromS3Result = await _S3Service.RemovePhotoByUrlAsync(DTO.AvatarUrl);
-
-            if (!removePhotoFromS3Result.IsSuccess)
-            {
-                await ChangeStorePropertyAsync(UserId, x => x.UrlAvatar = DTO.AvatarUrl);
-                return Result<StoreOwnerResponseDTO>.Error(removePhotoFromS3Result.ErrorMessage, removePhotoFromS3Result.ErrorType ?? ErrorType.Conflict);
-            }
-
-            return Result<StoreOwnerResponseDTO>.Success(updateStoreAvatarUrl.data);
-        }
-        // pics
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid UserId, StoreChangeDescriptionDTO DTO)
            => ChangeStorePropertyAsync(UserId, x => x.Description = DTO.Description);
     }
