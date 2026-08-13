@@ -52,7 +52,8 @@ namespace Infrastructure.AppDbContexts
 
             // user
             modelBuilder.Entity<User>()
-                .HasQueryFilter(x => !x.IsDeleted);
+                .HasIndex(x => x.Login)
+                .IsUnique();
 
             modelBuilder.Entity<User>() // user with store
                 .HasOne(u => u.Store)
@@ -83,14 +84,7 @@ namespace Infrastructure.AppDbContexts
                 .WithMany(p => p.CartItems)
                 .HasForeignKey(ct => ct.ProductId);
 
-            // product
-            modelBuilder.Entity<Product>()
-                .HasQueryFilter(x => !x.IsDeleted);
-
-            // store
-            modelBuilder.Entity<Store>()
-                .HasQueryFilter(x => !x.IsDeleted);
-
+            // store;
             modelBuilder.Entity<Store>() // store with products
                 .HasMany(s => s.Products)
                 .WithOne(p => p.Store)

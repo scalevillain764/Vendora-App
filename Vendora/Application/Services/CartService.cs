@@ -79,7 +79,7 @@ namespace Application.Services
             if (cartItem == null || cart == null)
                 return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
-            if (cartItem.Quantity > 0)
+            if (cartItem.Quantity > 1)
             {
                 cartItem.Quantity--;
                 await _context.SaveChangesAsync();

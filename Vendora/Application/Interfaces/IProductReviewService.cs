@@ -11,6 +11,5 @@ namespace Application.Interfaces
         Task<Result<ProductReviewResponseDTO>> EditProductReviewAsync(Ulid UserId, Ulid ReviewId, ProductReviewCreationAndChangeDTO DTO);
         Task<Result<List<ProductReviewResponseDTO>>> GetProductReviewsAsync(Ulid UserId, Ulid ProductId);
         Task<Result<ProductReviewResponseDTO>> ReplyProductReviewAsync(Ulid UserId, Ulid ReviewId, ProductReviewSellerReplyDTO DTO);
-        // Add Repl
     }
 }

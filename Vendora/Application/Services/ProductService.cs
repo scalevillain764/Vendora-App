@@ -1,4 +1,5 @@
-﻿using Application.DTO.ProductDTO;
+﻿using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using Application.DTO.ProductDTO;
 using Application.DTO.ProductDTO.StoreDTO;
 using Application.Interfaces;
 using Application.Result;
@@ -98,50 +99,51 @@ namespace Application.Services
         }
                 
 
-        public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile file) // change preview after creating e.g
+        public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file) // change preview after creating e.g
         {
-            var loadPicture = await _S3Service.UploadPhotoAsync(file);
+            var product = await _context.Products
+                .Include(x => x.Store)
+                .FirstOrDefaultAsync(x => x.Id == ProductId);
 
-            if (!loadPicture.IsSuccess)
-                return Result<ProductResponseDTO>.Error(loadPicture.ErrorMessage, loadPicture.ErrorType ?? ErrorType.Conflict);
+            if (product.Store.SellerId != UserId)
+                return Result<ProductResponseDTO>.Error("Это не ваш товар", ErrorType.Forbidden);
 
-            string NewUrl = loadPicture.data;
-            string? PrevUrl = null;
+            if (product == null)
+                return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
-            var updateProductPreviewUrl = await ChangeProductProperty(UserId, ProductId, x =>
+            string? oldUrl = product.PreviewUrl;
+            string? newUrl = null;
+
+            if(file == null)
             {
-                PrevUrl = x.PreviewUrl;
-                x.PreviewUrl = NewUrl;              
-            });
-
-            if (!updateProductPreviewUrl.IsSuccess)
+                if (product.PreviewUrl != null)
+                    product.PreviewUrl = null;
+            }
+            else
             {
-                await _S3Service.RemovePhotoByUrlAsync(NewUrl);
-                return Result<ProductResponseDTO>.Error(updateProductPreviewUrl.ErrorMessage, updateProductPreviewUrl.ErrorType ?? ErrorType.Conflict);
+                var loadPicture = await _S3Service.UploadPhotoAsync(file);
+
+                if (!loadPicture.IsSuccess)
+                    return Result<ProductResponseDTO>.Error(loadPicture.ErrorMessage, loadPicture.ErrorType ?? ErrorType.Conflict);
+
+                newUrl = loadPicture.data;
             }
 
-            if (!string.IsNullOrEmpty(PrevUrl))
-                await _S3Service.RemovePhotoByUrlAsync(PrevUrl);
-
-            return Result<ProductResponseDTO>.Success(updateProductPreviewUrl.data);
-        }  
-
-        public async Task<Result<ProductResponseDTO>> RemoveProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO) // remove preview after creating e.g
-        {
-            var updateProductPreviewUrl = await ChangeProductProperty(UserId, ProductId, x => x.PreviewUrl = null);
-
-            if (!updateProductPreviewUrl.IsSuccess)
-                return Result<ProductResponseDTO>.Error(updateProductPreviewUrl.ErrorMessage, updateProductPreviewUrl.ErrorType ?? ErrorType.Conflict);
-
-            var removePictureFromS3 = await _S3Service.RemovePhotoByUrlAsync(DTO.previewURL);
-
-            if (!removePictureFromS3.IsSuccess)
+            try
             {
-                await ChangeProductProperty(UserId, ProductId, x => x.PreviewUrl = DTO.previewURL);
-                return Result<ProductResponseDTO>.Error(removePictureFromS3.ErrorMessage, removePictureFromS3.ErrorType ?? ErrorType.Conflict);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                if (newUrl != null)
+                    await _S3Service.RemovePhotoByUrlAsync(newUrl);
+                throw;
             }
 
-            return Result<ProductResponseDTO>.Success(updateProductPreviewUrl.data);
+            if (oldUrl != null)
+                await _S3Service.RemovePhotoByUrlAsync(oldUrl);
+
+            return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
         // pics
 

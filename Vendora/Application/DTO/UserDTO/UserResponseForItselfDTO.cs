@@ -14,9 +14,9 @@ namespace Application.DTO.UserDTO
         int ReviewsLeft
     )
     {
-        public UserResponseForItselfDTO(User user, int productsBought, int reviewsLeft) :
+        public UserResponseForItselfDTO(User user, int ordersMade, int reviewsLeft) :
             this(user.ProfileName, user.FirstName, user.LastName, user.UserGender.ToString(),
-                user.AvatarUrl, user.Email, user.Phone, user.Balance, productsBought, reviewsLeft)
+                user.AvatarUrl, user.Email, user.Phone, user.Balance, ordersMade, reviewsLeft)
         { }
     };
 }

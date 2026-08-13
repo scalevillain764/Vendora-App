@@ -1,4 +1,5 @@
 ﻿using Application.DTO.AuthDTO;
+using Application.DTO.UserDTO;
 using Microsoft.AspNetCore.Mvc;
 using IAuthService = Application.Interfaces.IAuthService;
 namespace Presentation.Controllers
@@ -27,5 +28,15 @@ namespace Presentation.Controllers
         [Route("refresh")]
         public async Task<IActionResult> RefreshAsync()
             => ProcessResult(await _authService.RefreshAsync(CurrentUserId));
+
+        [HttpPatch]
+        [Route("password")]
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordDTO DTO)
+            => ProcessResult(await _authService.ChangeUserPasswordAsync(CurrentUserId, DTO));
+
+        [HttpPatch]
+        [Route("login")]
+        public async Task<IActionResult> ChangeLoginAsync([FromBody] UserChangeLoginDTO DTO)
+            => ProcessResult(await _authService.ChangeUserLoginAsync(CurrentUserId, DTO));
     }
 }

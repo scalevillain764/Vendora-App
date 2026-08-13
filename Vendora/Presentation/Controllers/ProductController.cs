@@ -66,14 +66,9 @@ namespace Presentation.Controllers
             => ProcessResult(await _productService.GetProductAsync(CurrentUserId, ProductId));
 
         [HttpPatch]
-        [Route("preview/change/{ProductId}")]
-        public async Task<IActionResult> ChangeProductPreviewPictureAsync(Ulid ProductId, IFormFile file)
-            => ProcessResult(await _productService.ChangeProductPreviewPictureAsync(CurrentUserId, ProductId, file));
-
-        [HttpPatch]
-        [Route("preview/remove/{ProductId}")]
-        public async Task<IActionResult> RemoveProductPreviewPictureAsync(Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO)
-            => ProcessResult(await _productService.RemoveProductPreviewPictureAsync(CurrentUserId, ProductId, DTO));
+        [Route("preview/{ProductId}")]
+        public async Task<IActionResult> ChangeProductPreviewPictureAsync(Ulid ProductId, IFormFile? file)
+            => ProcessResult(await _productService.ChangeProductPreviewPictureAsync(CurrentUserId, ProductId, file));      
 
         [HttpPatch]
         [Route("images/add/{ProductId}")]

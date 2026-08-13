@@ -16,8 +16,7 @@ namespace Application.Interfaces
         Task<Result<ProductResponseDTO>> ChangeProductDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeDescriptionDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductPriceAsync(Ulid UserId, Ulid ProductId, ProductChangePriceDTO DTO);
         Task<Result<ProductResponseDTO>> GetProductAsync(Ulid UserId, Ulid ProductId);
-        Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile file);
-        Task<Result<ProductResponseDTO>> RemoveProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, ProductChangeAndRemovePreviewPictureDTO DTO);
+        Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file);
         Task<Result<ProductResponseDTO>> AddPicturesToProductAsync(Ulid UserId, Ulid ProductId, ProductAddPicturesDTO DTO);
         Task<Result<ProductResponseDTO>> RemovePictureFromProduct(Ulid UserId, Ulid ProductId, ProductRemovePictureDTO DTO);
         Task<Result<ProductResponseDTO>> ChangeProductShortDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeShortDescriptionDTO DTO);

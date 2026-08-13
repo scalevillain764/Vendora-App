@@ -15,14 +15,14 @@ namespace Presentation.Controllers
             _userService = userService;
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMyAccountAsync()
+            => ProcessResult(await _userService.DeleteMyAccountAsync(CurrentUserId));
+
         [HttpGet]
         [Route("me")]
         public async Task<IActionResult> GetMeAsync()
             => ProcessResult(await _userService.GetMeAsync(CurrentUserId));
-
-        [HttpDelete]
-        public async Task<IActionResult> DeleteMyAccountAsync()
-            => ProcessResult(await _userService.DeleteMyAccountAsync(CurrentUserId));
 
         [HttpGet]
         [Route("{UserId}")]
@@ -60,7 +60,7 @@ namespace Presentation.Controllers
             => ProcessResult(await _userService.ChangeUserGenderAsync(CurrentUserId, DTO));
 
         [HttpPatch]
-        [Route("profilePicture")]
+        [Route("profile_picture")]
         public async Task<IActionResult> ChangeUserProfilePictureAsync(IFormFile file)
             => ProcessResult(await _userService.ChangeUserProfilePictureAsync(CurrentUserId, file));
     }
