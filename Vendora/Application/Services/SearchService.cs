@@ -41,7 +41,7 @@ namespace Application.Services
                 foreach(var category in DTO.CategoryIds)
                 {
                     products = products
-                        .Where(x => (int)x.Category == category); // fix later: add list categories
+                        .Where(x => DTO.CategoryIds.Contains((int)x.Category)); // fix later: add list categories
                 }
             }
 

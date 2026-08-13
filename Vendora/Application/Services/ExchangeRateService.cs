@@ -13,6 +13,7 @@ namespace Application.Services
         }
         public async Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync()
         {
+            List<string> target_keys = ["RUB", "USD", "BYN"];
             var client = _factory.CreateClient();
 
             string? API_KEY = Environment.GetEnvironmentVariable("EXCHANGE_RATES_API_KEY");
@@ -49,7 +50,11 @@ namespace Application.Services
             if (responseDTO.ConversionRates.Count == 0)
                 return Result<ExchangeUserResponseDTO>.Error("Ошибка загрузки валюты", ErrorType.Conflict);
 
-            return Result<ExchangeUserResponseDTO>.Success(new ExchangeUserResponseDTO(responseDTO.ConversionRates));
+            var rez = responseDTO.ConversionRates
+                .Where(x => target_keys.Contains(x.Key))
+                .ToDictionary(x => x.Key, x => x.Value);
+
+            return Result<ExchangeUserResponseDTO>.Success(new ExchangeUserResponseDTO(rez));
         }
     }
 }
