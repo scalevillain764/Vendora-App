@@ -157,7 +157,7 @@ namespace Infrastructure.AppDbContexts
         }
 
         public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
-        {
+        {          
             public AppDbContext CreateDbContext(string[] args)
             {
                 var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
@@ -168,25 +168,16 @@ namespace Infrastructure.AppDbContexts
                     connectionString = args[0]; 
                 else
                 {
-                    string? connectionPort = Environment.GetEnvironmentVariable("POSTGRES_PORT");
-                    string? connectionDatabase = Environment.GetEnvironmentVariable("POSTGRES_DATABASE");
-                    string? connectionUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME");
-                    string? connectionPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+                    var basePath = Directory.GetCurrentDirectory();
 
-                    if (string.IsNullOrEmpty(connectionPort) ||
-                        string.IsNullOrEmpty(connectionDatabase) ||
-                        string.IsNullOrEmpty(connectionUsername) ||
-                        string.IsNullOrEmpty(connectionPassword))
-                        throw new InvalidOperationException(
-                            $"Configuration error in PostgreSQL:\n" +
-                            $"PORT: '{connectionPort ?? "Undefined"}'\n" +
-                            $"DATABASE: '{connectionDatabase ?? "Undefined"}'\n" +
-                            $"USERNAME: '{connectionUsername ?? "Undefined"}'\n" +
-                            $"PASSWORD: '{connectionPassword ?? "Undefined"}'"
-                        );
+                    var configuration = new ConfigurationBuilder()
+                        .SetBasePath(basePath)
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.Development.json", optional: true) 
+                        .AddEnvironmentVariables() 
+                        .Build();
 
-                    connectionString =
-                        $"Host=localhost;Port={connectionPort};Database={connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
+                    connectionString = configuration.GetConnectionString("DefaultConnection");
                 }
   
                 if (string.IsNullOrEmpty(connectionString))

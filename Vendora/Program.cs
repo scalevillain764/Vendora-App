@@ -130,9 +130,8 @@ namespace Vendora
                     $"PASSWORD: '{connectionPassword ?? "Undefined"}'"
                 );
 
-            connectionString =
-                $"Host=localhost;Port={connectionPort};Database={connectionDatabase};Username={connectionUsername};Password={connectionPassword}";
-
+            connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                
             builder.Services.AddDbContext<AppDbContext>(x =>
             {
                 x.UseNpgsql(connectionString);

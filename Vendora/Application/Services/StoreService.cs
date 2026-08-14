@@ -48,7 +48,7 @@ namespace Application.Services
 
             await _context.SaveChangesAsync();
 
-            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
+            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true));
         }
 
         public async Task<Result<StoreOwnerResponseDTO>> CreateStoreAsync(Ulid UserId, StoreOwnerCreateDTO dto)
@@ -65,7 +65,7 @@ namespace Application.Services
 
             await _context.SaveChangesAsync();
 
-            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(newStore));
+            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(newStore, true));
         }
 
         public async Task<Result<StoreOwnerResponseDTO>> GetMyStoreAsync(Ulid UserId)
@@ -74,7 +74,7 @@ namespace Application.Services
                 .FirstOrDefaultAsync(x => x.SellerId == UserId);
 
             return store != null
-                ? Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store))
+                ? Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true))
                 : Result<StoreOwnerResponseDTO>.Error("Магазин не создан", ErrorType.Forbidden);              
         }
 
@@ -129,7 +129,7 @@ namespace Application.Services
             }
 
             await _S3Service.RemovePhotoByUrlAsync(old_url);
-            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store));
+            return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true));
         }
 
         public Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid UserId, StoreChangeDescriptionDTO DTO)
