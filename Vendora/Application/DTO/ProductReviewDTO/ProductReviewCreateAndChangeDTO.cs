@@ -7,8 +7,6 @@ namespace Application.DTO.ProductReviewDTO
         Ulid StoreId,
         string? ReviewText,
         int Rating,
-        List<string>? PhotoUrl,
-        DateTime CreatedAt,
-        DateTime? UpdateAt
+        List<string>? PhotoUrl
     );   
 }

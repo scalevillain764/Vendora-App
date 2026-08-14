@@ -101,6 +101,11 @@ namespace Infrastructure.AppDbContexts
                 .WithMany(p => p.OrderItems)
                 .HasForeignKey(oi => oi.ProductId);
 
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Store)
+                .WithMany(s => s.OrderItems)
+                .HasForeignKey(oi => oi.StoreId);
+
             modelBuilder.Entity<Product>()
                 .Property(p => p.Article)
                 .HasIdentityOptions(startValue: 10000000);

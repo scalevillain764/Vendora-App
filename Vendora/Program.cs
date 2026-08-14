@@ -111,26 +111,8 @@ namespace Vendora
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
 
-            // postgre
-            string? connectionString = null;
-            string? connectionPort = Environment.GetEnvironmentVariable("POSTGRES_PORT");
-            string? connectionDatabase = Environment.GetEnvironmentVariable("POSTGRES_DATABASE");
-            string? connectionUsername = Environment.GetEnvironmentVariable("POSTGRES_USERNAME");
-            string? connectionPassword = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
-
-            if (string.IsNullOrEmpty(connectionPort) ||
-               string.IsNullOrEmpty(connectionDatabase) ||
-               string.IsNullOrEmpty(connectionUsername) ||
-               string.IsNullOrEmpty(connectionPassword))
-                throw new InvalidOperationException(
-                    $"Configuration error in PostgreSQL:\n" +
-                    $"PORT: '{connectionPort ?? "Undefined"}'\n" +
-                    $"DATABASE: '{connectionDatabase ?? "Undefined"}'\n" +
-                    $"USERNAME: '{connectionUsername ?? "Undefined"}'\n" +
-                    $"PASSWORD: '{connectionPassword ?? "Undefined"}'"
-                );
-
-            connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            // postgre     
+            string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
                 
             builder.Services.AddDbContext<AppDbContext>(x =>
             {

@@ -15,20 +15,21 @@ namespace Domain.OrderItems
         public Ulid ProductId { get; set; }
         public Product Product { get; set; } = null!;
 
-        public Ulid SellerId { get; set; }
-
         public Ulid StoreId { get; set; }
         public Store Store { get; set; } = null!;
+
+        public Ulid SellerId { get; set; }
 
         public string ProductName { get; set; }
         public decimal PricePerUnit { get; set; }
         public int Quantity { get; set; }
         private OrderItem() { }
-        internal OrderItem(Ulid orderId, CartItem item, Ulid sellerId)
-        {
+        internal OrderItem(Ulid orderId, CartItem item, Ulid sellerId, Ulid storeId)
+        {      
             Id = Ulid.NewUlid();
             OrderId = orderId;
             SellerId = sellerId;
+            StoreId = storeId;
             OrderId = orderId;
             ProductId = item.ProductId;
             ProductName = item.Product.Name;

@@ -1,4 +1,5 @@
-﻿using Domain.Products;
+﻿using Domain.OrderItems;
+using Domain.Products;
 using Domain.Users;
 namespace Domain.Stores
 {
@@ -15,6 +16,7 @@ namespace Domain.Stores
         public string? UrlAvatar { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<Product> Products { get; set; } = new(); // np
+        public List<OrderItem> OrderItems { get; set; } = new();
         public bool IsDeleted { get; set; }
 
         public Store(Ulid sellerId, string name, string? description, string? urlAvatar)
