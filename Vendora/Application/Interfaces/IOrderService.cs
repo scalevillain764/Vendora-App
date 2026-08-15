@@ -9,5 +9,6 @@ namespace Application.Interfaces
         Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId);
         Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId);
         Task<Result<OrderResponseDTO>> ChangeOrderStatusToFailAsync(Ulid orderId);
+        Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId);
     }
 }

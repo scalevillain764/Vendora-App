@@ -37,6 +37,18 @@ namespace Application.Services
 
             return Result<OrderResponseDTO>.Success(new OrderResponseDTO(order, orderItemResponseDTOS));
         }
+
+        public async Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId)
+        {
+            var my_orders = await _context.Orders
+                .Where(x => x.UserId == UserId)
+                .Select(x => new OrderResponseDTO(x,
+                    x.Items.Select(i => new OrderItemResponseDTO(i)).ToList()))
+                .ToListAsync();
+
+            return Result<List<OrderResponseDTO>>.Success(my_orders);
+        }
+
         public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId)
         {       
             var cart = await _context.Carts
