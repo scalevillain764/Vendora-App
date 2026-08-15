@@ -96,8 +96,7 @@ namespace Application.Services
                     .ToListAsync();
 
             return Result<List<ProductResponseDTO>>.Success(rez);
-        }
-                
+        }               
 
         public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file) // change preview after creating e.g
         {
@@ -105,13 +104,14 @@ namespace Application.Services
                 .Include(x => x.Store)
                 .FirstOrDefaultAsync(x => x.Id == ProductId);
 
-            if (product.Store.SellerId != UserId)
-                return Result<ProductResponseDTO>.Error("Это не ваш товар", ErrorType.Forbidden);
-
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
             string? oldUrl = product.PreviewUrl;
+
+            if (product.Store.SellerId != UserId)
+                return Result<ProductResponseDTO>.Error("Это не ваш товар", ErrorType.Forbidden);
+         
             string? newUrl = null;
 
             if(file == null)
