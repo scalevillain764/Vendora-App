@@ -2,7 +2,7 @@
 namespace Application.DTO.ProductDTO.StatisticsDTO
 {
     public record ProductStatisticsDTO(
-        int SoldQuality,
+        int SoldQuantity,
         int OrdersCount,
         decimal Revenue
         )

@@ -15,6 +15,10 @@ namespace Presentation.Controllers
             _orderService = orderService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetMyOrdersAsync()
+            => ProcessResult(await _orderService.GetMyOrdersAsync(CurrentUserId));
+
         [HttpPost]
         public async Task<IActionResult> CreatePendingOrderAsync()
             => ProcessResult(await _orderService.CreatePendingOrderAsync(CurrentUserId));
