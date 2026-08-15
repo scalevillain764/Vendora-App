@@ -15,7 +15,7 @@ namespace Presentation.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> SearchAsync([FromBody] SearchRequestDTO DTO)
             => ProcessResult(await _service.SearchAsync(CurrentUserId, DTO));
     }
