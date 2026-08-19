@@ -37,7 +37,6 @@ namespace Application.Services
             var cart = new Cart(user.Id);
 
             _context.Users.Add(user);
-            _context.Carts.Add(cart);
 
             await _context.SaveChangesAsync();
 

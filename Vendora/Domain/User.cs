@@ -67,6 +67,7 @@ namespace Domain.Users
             Phone = null;
             IsDeleted = false;
             Balance = 0;
+            Cart = new Cart(Id);
         }
     }
 }
