@@ -5,6 +5,8 @@
         List<int>? CategoryIds,
         decimal? MinPrice,
         decimal? MaxPrice,
-        bool? OnlyInStock
+        bool? OnlyInStock,
+        int Page,
+        int PageSize
     );
 }

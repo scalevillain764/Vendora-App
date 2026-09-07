@@ -1,13 +1,14 @@
 ﻿using Application.DTO.ProductDTO;
+using Application.DTO.ProductDTO.StatisticsDTO;
 using Application.DTO.ProductDTO.StoreDTO;
+using Application.PagedResponse;
 using Application.Result;
 using Domain.Products;
-using Application.DTO.ProductDTO.StatisticsDTO;
 namespace Application.Interfaces
 {
     public interface IProductService
     {
-        Task<Result<List<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, Ulid StoreId);
+        Task<Result<PagedResponse<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, ProductsGetFromStoreDTO DTO);
         Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO);
         Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId);
         Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO);

@@ -10,6 +10,7 @@ using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
 using IProductService = Application.Interfaces.IProductService;
+using Application.PagedResponse;
 namespace Application.Services
 {
     public class ProductService : IProductService
@@ -88,14 +89,20 @@ namespace Application.Services
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
 
-        public async Task<Result<List<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, Ulid StoreId)
+        public async Task<Result<PagedResponse<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, ProductsGetFromStoreDTO DTO)
         {
-            var rez = await _context.Products
-                    .Where(x => x.StoreId == StoreId)
-                    .Select(x => new ProductResponseDTO(x, x.Store.SellerId == UserId))
-                    .ToListAsync();
+            var query = _context.Products
+                .Where(x => x.StoreId == DTO.StoreId);
 
-            return Result<List<ProductResponseDTO>>.Success(rez);
+            int totalCount = await query.CountAsync();
+
+            var rez = await query
+                .Skip((DTO.page - 1) * DTO.pageSize)
+                .Take(DTO.pageSize)
+                .Select(x => new ProductResponseDTO(x, x.Store.SellerId == UserId))
+                .ToListAsync();
+
+            return Result<PagedResponse<ProductResponseDTO>>.Success(new PagedResponse<ProductResponseDTO>(rez, DTO.page, DTO.pageSize, totalCount));
         }               
 
         public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file) // change preview after creating e.g

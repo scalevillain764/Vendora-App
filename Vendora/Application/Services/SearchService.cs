@@ -5,6 +5,7 @@ using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
 using ISearchInterface = Application.Interfaces.ISearchService;
+using Application.PagedResponse;
 namespace Application.Services
 {
     public class SearchService: ISearchInterface
@@ -15,13 +16,13 @@ namespace Application.Services
             _context = context;
         }
 
-        public async Task<Result<List<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO)
+        public async Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO)
         {
             var products = _context.Products
                 .Include(x => x.ProductReviews)
                 .AsQueryable();
 
-            if(!string.IsNullOrWhiteSpace(DTO.Query))
+            if (!string.IsNullOrWhiteSpace(DTO.Query))
             {
                 string[] words = DTO.Query
                     .ToLower()
@@ -57,8 +58,9 @@ namespace Application.Services
                 products = products
                     .Where(x => x.Quantity > 0);
 
+            int totalCount = await products.CountAsync();
             var userLikes = _context.Favourites.Where(x => x.UserId == UserId);
-
+             
             var result = await products
                 .GroupJoin (
                     userLikes,
@@ -70,10 +72,12 @@ namespace Application.Services
                         IsFav = favs.Any()
                     }
                  )
+                .Skip((DTO.Page - 1) * DTO.PageSize)
+                .Take(DTO.PageSize)
                 .Select(x => new ProductCardDTO(x.Product, x.IsFav))
                 .ToListAsync();
 
-            return Result<List<ProductCardDTO>>.Success(result);
+            return Result<PagedResponse<ProductCardDTO>>.Success(new PagedResponse<ProductCardDTO>(result, DTO.Page, DTO.PageSize, totalCount));
         }
     }
 }

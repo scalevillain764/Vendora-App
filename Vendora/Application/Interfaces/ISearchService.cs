@@ -1,10 +1,11 @@
 ﻿using Application.DTO.ProductDTO.StoreDTO;
-using Application.Result;
 using Application.DTO.SearchDTO;
+using Application.PagedResponse;
+using Application.Result;
 namespace Application.Interfaces
 {
     public interface ISearchService
     {
-        Task<Result<List<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO);
+        Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO);
     }
 }
