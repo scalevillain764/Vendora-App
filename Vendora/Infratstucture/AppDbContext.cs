@@ -1,6 +1,4 @@
-﻿using Domain.CartItems;
-using Domain.Carts;
-using Domain.Favourites;
+﻿using Domain.Favourites;
 using Domain.OrderItems;
 using Domain.Orders;
 using Domain.ProductReviews;
@@ -23,8 +21,6 @@ namespace Infrastructure.AppDbContexts
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet <OrderItem> OrderItems { get; set; }
-        public DbSet <Cart> Carts { get; set; }
-        public DbSet <CartItem> CartItems { get; set; }
         public DbSet<Transaction> Transactions { get; set; }      
         public DbSet<Favourite> Favourites { get; set; }
         public DbSet<ProductReview> ProductReviews { get; set; }
@@ -59,30 +55,6 @@ namespace Infrastructure.AppDbContexts
                 .HasOne(u => u.Store)
                 .WithOne(s => s.Seller)
                 .HasForeignKey<Store>(s => s.SellerId);
-
-            modelBuilder.Entity<User>() // user with cart
-                .HasOne(u => u.Cart)
-                .WithOne(c => c.User)
-                .HasForeignKey<Cart>(c => c.UserId);
-
-            modelBuilder.Entity<User>() // user with orders
-                .HasMany(u => u.Orders)
-                .WithOne(o => o.User)
-                .HasForeignKey(o => o.UserId);
-
-            // cart
-            modelBuilder.Entity<Cart>()
-                .HasKey(x => x.UserId);
-
-            modelBuilder.Entity<Cart>() // cart with cart items
-                 .HasMany(c => c.Items)
-                 .WithOne(ct => ct.Cart)
-                 .HasForeignKey(ct => ct.CartId);
-
-            modelBuilder.Entity<CartItem>() // cartItems with product
-                .HasOne(ct => ct.Product)
-                .WithMany(p => p.CartItems)
-                .HasForeignKey(ct => ct.ProductId);
 
             // store;
             modelBuilder.Entity<Store>() // store with products

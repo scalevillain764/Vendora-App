@@ -1,24 +1,15 @@
-﻿using Domain.CartItems;
+﻿using Domain.Products;
 namespace Application.DTO.ProductDTO.CartDTO
 {
     public record ProductCartCardResponseDTO(
         Ulid ProductId,
-        Ulid CartItemId,
         string Name,
-        decimal Price,
+        decimal PricePerUnit,
         string? ShortDescription,
         string? PreviewUrl,
-        int Quantity
-    )
+        int Quantity)
     {
-        public ProductCartCardResponseDTO(CartItem cartItem) :
-            this(cartItem.Product.Id,
-                cartItem.Id,
-                cartItem.Product.Name,
-                cartItem.PricePerUnit * cartItem.Quantity, 
-                cartItem.Product.ShortDescription, 
-                cartItem.Product.PreviewUrl,
-                cartItem.Quantity)
-        { }
+        public ProductCartCardResponseDTO(Product product, int quantity)
+            : this(product.Id, product.Name, product.Price, product.ShortDescription, product.PreviewUrl, quantity) { }
     }
 }

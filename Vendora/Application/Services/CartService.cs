@@ -1,11 +1,15 @@
-﻿using Application.DTO.CartDTO;
+﻿using Application.DTO.AuthDTO;
+using Application.DTO.CartDTO;
 using Application.DTO.ProductDTO.CartDTO;
 using Application.Result;
-using Domain.CartItems;
 using Domain.ErrorTypes;
+using Domain.Products;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
+using System.Text.Json;
 using ICartService = Application.Interfaces.ICartService;
 
 namespace Application.Services
@@ -13,145 +17,146 @@ namespace Application.Services
     public class CartService : ICartService
     {
         private readonly AppDbContext _context;
+        private readonly IDatabase _redis;
 
-        public CartService(AppDbContext context)
+        public CartService(AppDbContext context, IConnectionMultiplexer redis)
         {
             _context = context;
+            _redis = redis.GetDatabase();
         }
-        private async Task<Result<CartItem>> GetCartItemAsync(Ulid UserId, Ulid CartItemId)
+        private async Task SaveRedis(CartCacheResponseDTO cachedCart, Ulid UserId)
         {
-            var cartItem = await _context.CartItems
-                 .Include(c => c.Product)
-                    .Include(c => c.Cart)
-                 .FirstOrDefaultAsync(x => x.Id == CartItemId);
+            var serializedCart = JsonSerializer.Serialize(cachedCart);
+            await _redis.StringSetAsync($"cart:user:{UserId}", serializedCart);
+        }
+        private async Task<Result<CartCacheResponseDTO>> GetCartInCacheAsync(Ulid UserId)
+        {
+            var cachedCart = await _redis.StringGetAsync($"cart:user:{UserId}");
 
-            if (cartItem == null)
-                return Result<CartItem>.Error("Товар в корзине не найден", ErrorType.NotFound);
+            if (cachedCart.IsNullOrEmpty)
+                return Result<CartCacheResponseDTO>.Error("Произошла ошибка получения корзины", ErrorType.Conflict);
 
-            if (cartItem.Cart.UserId != UserId)
-                return Result<CartItem>.Error("Товар не в вашей корзине", ErrorType.Conflict);
+            var deserializedCachedCart = JsonSerializer.Deserialize<CartCacheResponseDTO>((string)cachedCart!);
 
-            return Result<CartItem>.Success(cartItem);
+            if (deserializedCachedCart == null)
+                return Result<CartCacheResponseDTO>.Error("Произошла ошибка получения корзины", ErrorType.Conflict);
+
+            return Result<CartCacheResponseDTO>.Success(deserializedCachedCart);
         }
         public async Task<Result<CartResponseDTO>> GetMyCartAsync(Ulid UserId)
         {
-            var cart = await _context.Carts
-                .Include(x => x.Items)
-                    .ThenInclude(c => c.Product)
-                .FirstOrDefaultAsync(x => x.UserId == UserId);
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
-            if (cart == null)
-                return Result<CartResponseDTO>.Error("Корзина не создана", ErrorType.NotFound);
+            if (!cachedCartRequest.IsSuccess)
+                return Result<CartResponseDTO>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
 
-            bool isCartUpdated = false;
+            var cachedCart = cachedCartRequest.data!;
 
-            foreach (var cartItem in cart.Items)
+            var Ids = cachedCart.CartItems
+                .Keys.ToList();
+
+            var products = await _context.Products
+                .Where(p => Ids.Contains(p.Id))
+                .Select(p => 
+                    new ProductCartCardResponseDTO(p.Id, p.Name, p.Price, p.ShortDescription, p.PreviewUrl, cachedCart.CartItems[p.Id]))
+                .ToListAsync();
+
+            var cartResponse = new CartResponseDTO(cachedCart.UserId, products, products.Count, products.Sum(p => p.Quantity * p.PricePerUnit));
+
+            return Result<CartResponseDTO>.Success(cartResponse);
+        }
+
+        public async Task<Result<string>> RemoveProductFromCartAsync(Ulid UserId, Ulid ProductId)
+        {
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
+
+            if (!cachedCartRequest.IsSuccess)
+                return Result<string>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
+
+            var cachedCart = cachedCartRequest.data!;
+
+            cachedCart.CartItems.Remove(ProductId);
+           
+            return Result<string>.Success("OK");
+        }
+
+        public async Task<Result<ProductCartCardResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid ProductId)
+        {
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
+
+            if (!cachedCartRequest.IsSuccess)
+                return Result<ProductCartCardResponseDTO>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
+
+            var cachedCart = cachedCartRequest.data!;
+
+            if (!cachedCart.CartItems.ContainsKey(ProductId))
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            if (cachedCart.CartItems[ProductId] > 1)
             {
-                if(cartItem.Product.Price != cartItem.PricePerUnit)
-                {
-                    cartItem.PricePerUnit = cartItem.Product.Price;
-                    isCartUpdated = true;
-                }
+                cachedCart.CartItems[ProductId]--;
+                await SaveRedis(cachedCart, UserId);
             }
-
-            if(isCartUpdated) await _context.SaveChangesAsync();
-
-            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
-        }
-
-        public async Task<Result<CartResponseDTO>> RemoveCartItemAsync(Ulid UserId, Ulid CartItemId)
-        {
-            var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
-
-            if (!cartItemResult.IsSuccess)
-                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
-
-            var cartItem = cartItemResult.data;
-            var cart = cartItem.Cart;
-
-            if (cartItem == null || cart == null)
-                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
-
-            _context.CartItems.Remove(cartItem);
-
-            await _context.SaveChangesAsync();
-            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
-        }
-
-        public async Task<Result<CartResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
-        {
-            var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
-
-            if (!cartItemResult.IsSuccess)
-                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
-
-            var cartItem = cartItemResult.data;
-            var cart = cartItem.Cart;
-
-            if (cartItem == null || cart == null)
-                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
-
-            if (cartItem.Quantity > 1)
-            {
-                cartItem.Quantity--;
-                await _context.SaveChangesAsync();
-            }
-
-            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
-        }
-
-        public async Task<Result<CartResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid CartItemId)
-        {
-            var cartItemResult = await GetCartItemAsync(UserId, CartItemId);
-
-            if (!cartItemResult.IsSuccess)
-                return Result<CartResponseDTO>.Error(cartItemResult.ErrorMessage, cartItemResult.ErrorType.Value);
-
-            var cartItem = cartItemResult.data;
-            var cart = cartItem.Cart;
-
-            if (cartItem == null || cart == null)
-                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
-
-            if (cartItem.Product.Quantity > cartItem.Quantity)
-            {
-                cartItem.Quantity++;
-                await _context.SaveChangesAsync();
-            }
-
-            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
-        }
-
-        public async Task<Result<CartResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId)
-        {
-            var cart = await _context.Carts
-                .Include(x => x.Items)
-                    .ThenInclude(c => c.Product)
-                .FirstOrDefaultAsync(x => x.UserId == UserId);
-
-            if(cart == null)
-                return Result<CartResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
-
+              
             var product = await _context.Products
                 .FindAsync(ProductId);
 
             if(product == null)
-                return Result<CartResponseDTO>.Error("Товар не найден", ErrorType.NotFound);
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
-            if(cart.Items.Any(x => x.ProductId == product.Id))
-                return Result<CartResponseDTO>.Error("Товар уже добавлен в корзину", ErrorType.Conflict);
+            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
+        }
 
-            if (product.Quantity == 0)
-                return Result<CartResponseDTO>.Error("Товара нет в наличии", ErrorType.Conflict);
+        public async Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid ProductId)
+        {
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
-            cart.Items.Add(new CartItem(cart.UserId, ProductId, product.Price)
+            if (!cachedCartRequest.IsSuccess)
+                return Result<ProductCartCardResponseDTO>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
+
+            var cachedCart = cachedCartRequest.data!;
+
+            if (!cachedCart.CartItems.ContainsKey(ProductId))
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            var product = await _context.Products
+                .FindAsync(ProductId);
+
+            if (product == null)
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            if (cachedCart.CartItems[ProductId] > product.Quantity)
             {
-                Product = product 
-            });
-          
-            await _context.SaveChangesAsync();
+                cachedCart.CartItems[ProductId]++;
+                await SaveRedis(cachedCart, UserId);
+            }
+         
+            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
+        }
 
-            return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
+        public async Task<Result<ProductCartCardResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId)
+        {
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
+
+            if (!cachedCartRequest.IsSuccess)
+                return Result<ProductCartCardResponseDTO>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
+
+            var cachedCart = cachedCartRequest.data!;
+
+            if (!cachedCart.CartItems.ContainsKey(ProductId))
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            cachedCart.CartItems.Add(ProductId, 1);
+
+            var product = await _context.Products
+                .FindAsync(ProductId);
+
+            if (product == null)
+                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+
+            await SaveRedis(cachedCart, UserId);
+
+            return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
         }
     }
 }
