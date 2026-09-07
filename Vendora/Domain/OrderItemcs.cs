@@ -33,7 +33,7 @@ namespace Domain.OrderItems
             OrderId = orderId;
             ProductId = item.ProductId;
             ProductName = item.Product.Name;
-            PricePerUnit = item.PricePerUnit;
+            PricePerUnit = item.Product.Price;
             Quantity = item.Quantity;
         }
     }

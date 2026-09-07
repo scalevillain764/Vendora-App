@@ -38,11 +38,23 @@ namespace Application.Services
             var cart = await _context.Carts
                 .Include(x => x.Items)
                     .ThenInclude(c => c.Product)
-                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if (cart == null)
                 return Result<CartResponseDTO>.Error("Корзина не создана", ErrorType.NotFound);
+
+            bool isCartUpdated = false;
+
+            foreach (var cartItem in cart.Items)
+            {
+                if(cartItem.Product.Price != cartItem.PricePerUnit)
+                {
+                    cartItem.PricePerUnit = cartItem.Product.Price;
+                    isCartUpdated = true;
+                }
+            }
+
+            if(isCartUpdated) await _context.SaveChangesAsync();
 
             return Result<CartResponseDTO>.Success(new CartResponseDTO(cart));
         }
