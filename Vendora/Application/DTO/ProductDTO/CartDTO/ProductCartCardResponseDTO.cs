@@ -7,6 +7,7 @@ namespace Application.DTO.ProductDTO.CartDTO
         decimal PricePerUnit,
         string? ShortDescription,
         string? PreviewUrl,
+        decimal PricePerUnit,
         int Quantity)
     {
         public ProductCartCardResponseDTO(Product product, int quantity)

@@ -21,23 +21,23 @@ namespace Presentation.Controllers
             => ProcessResult(await _cartService.GetMyCartAsync(CurrentUserId));
 
         [HttpPost]
-        [Route("product/{productId}")]
+        [Route("products/{productId}")]
         public async Task<IActionResult> AddProductToCartAsync(Ulid productId)
             => ProcessResult(await _cartService.AddProductToCartAsync(CurrentUserId, productId));
 
-        [HttpPost]
-        [Route("items/{cartItemId}/increase")]
+        [HttpPatch]
+        [Route("products/{cartItemId}/increase")]
         public async Task<IActionResult> IncreaseQuantityAsync(Ulid cartItemId)
             => ProcessResult(await _cartService.IncreaseQuantityAsync(CurrentUserId, cartItemId));
 
-        [HttpPost]
-        [Route("items/{cartItemId}/decrease")]
+        [HttpPatch]
+        [Route("products/{cartItemId}/decrease")]
         public async Task<IActionResult> DecreaseQuantityAsync(Ulid cartItemId)
             => ProcessResult(await _cartService.DecreaseQuantityAsync(CurrentUserId, cartItemId));
 
         [HttpDelete]
-        [Route("items/{cartItemId}")]
+        [Route("products/{cartItemId}")]
         public async Task<IActionResult> RemoveCartItemAsync(Ulid cartItemId)
-           => ProcessResult(await _cartService.RemoveCartItemAsync(CurrentUserId, cartItemId)); 
+           => ProcessResult(await _cartService.RemoveProductFromCartAsync(CurrentUserId, cartItemId)); 
     }
 }

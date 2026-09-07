@@ -28,7 +28,6 @@ namespace Domain.Users
 
         // references 
         public Store? Store { get; set; } = null; // np
-        public Cart? Cart { get; set; } = null; // np
         public ICollection<Order> Orders { get; set; } = []; // np
         public ICollection<ProductReview> Reviews { get; set; } = [];
         
@@ -48,7 +47,6 @@ namespace Domain.Users
             Phone = phone;
             IsDeleted = false;
             Balance = 0;
-            Cart = new Cart(Id);
         }
 
         public User(string login, string passwordHash)
@@ -67,7 +65,6 @@ namespace Domain.Users
             Phone = null;
             IsDeleted = false;
             Balance = 0;
-            Cart = new Cart(Id);
         }
     }
 }

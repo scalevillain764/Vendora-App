@@ -1,22 +1,23 @@
 ﻿using Application.DTO.OrderDTO;
 using Application.DTO.OrderDTO.OrderItemDTO;
 using Application.Result;
-using Domain.CartItems;
-using Domain.Carts;
 using Domain.ErrorTypes;
 using Domain.OrderItems;
 using Domain.Orders;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
 using IOrderService = Application.Interfaces.IOrderService;
+using ICartService = Application.Interfaces.ICartService;
 namespace Application.Services
 {
     public class OrderService : IOrderService
     {
         private readonly AppDbContext _context;
-        public OrderService(AppDbContext context)
+        private readonly ICartService _cartService;
+        public OrderService(AppDbContext context, ICartService cartService)
         {
             _context = context;
+            _cartService = cartService;
         }
         private async Task<Result<OrderResponseDTO>> ChangeOrderStatusAsync(Ulid orderId, Action<Order> action)
         {
@@ -38,7 +39,7 @@ namespace Application.Services
             return Result<OrderResponseDTO>.Success(new OrderResponseDTO(order, orderItemResponseDTOS));
         }
 
-        public async Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId)
+        public async Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId) // pagination
         {
             var my_orders = await _context.Orders
                 .Where(x => x.UserId == UserId)
@@ -49,61 +50,78 @@ namespace Application.Services
             return Result<List<OrderResponseDTO>>.Success(my_orders);
         }
 
-        public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId)
-        {       
-            var cart = await _context.Carts
-                 .Include(x => x.Items)
-                    .ThenInclude(x => x.Product)
-                        .ThenInclude(x => x.Statistics)
-                 .Include(x => x.Items)
-                    .ThenInclude(x => x.Product)
-                        .ThenInclude(x => x.Store)
-                  .FirstOrDefaultAsync(x => x.UserId == UserId);
+        public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid userId)
+        {
+            var getMyCartRequest = await _cartService.GetMyCartAsync(userId);
 
-            if(cart == null)
-                return Result<OrderPreviewDTO>.Error("Корзина отсутствует", ErrorType.NotFound); // need to refactor and fix
+            if (!getMyCartRequest.IsSuccess)
+                return Result<OrderPreviewDTO>.Error(getMyCartRequest.ErrorMessage!, (ErrorType)getMyCartRequest.ErrorType!);
 
-            if(!cart.Items.Any())
+            var myCart = getMyCartRequest.data!;
+
+            if (!myCart.cartItems.Any())
                 return Result<OrderPreviewDTO>.Error("Корзина пуста", ErrorType.Conflict);
 
-            foreach (var item in cart.Items)
+            var productIds = myCart.cartItems.Select(x => x.ProductId).ToList();
+
+            var products = await _context.Products
+                .Include(p => p.Store)
+                .Include(p => p.Statistics)
+                .Where(p => productIds.Contains(p.Id))
+                .ToListAsync();
+
+            foreach (var cartItem in myCart.cartItems)
             {
-                if (item.Product.Quantity < item.Quantity)
-                    return Result<OrderPreviewDTO>.Error($"Недостаточно товара: {item.Product.Name}", ErrorType.Conflict);
+                var dbProduct = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
+
+                if (dbProduct == null)
+                    return Result<OrderPreviewDTO>.Error($"Товар с ID {cartItem.ProductId} не найден", ErrorType.NotFound);
+
+                if (dbProduct.Quantity < cartItem.Quantity)
+                    return Result<OrderPreviewDTO>.Error($"Недостаточно товара '{dbProduct.Name}' на складе. Доступно: {dbProduct.Quantity}, в корзине: {cartItem.Quantity}", ErrorType.Conflict);
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            decimal totalPrice = cart.Items.Sum(x => x.Product.Price * x.Quantity);
+            decimal totalPrice = myCart.cartItems.Sum(x => x.PricePerUnit * x.Quantity);
+            var newOrder = new Order(userId, totalPrice);
 
-            var newOrder = new Order(UserId, totalPrice);
+            var orderItems = new List<OrderItem>();
 
-            var orderItems = cart.Items
-                .Select(x => new OrderItem(newOrder.Id, x, x.Product.Store.SellerId, x.Product.StoreId))
-                .ToList();
-
-            newOrder.Items = orderItems;
-
-            _context.Orders.Add(newOrder);
-
-            foreach (var item in cart.Items)
+            foreach (var cartItem in myCart.cartItems)
             {
-                if(item.Product.Statistics != null)
-                    item.Product.Statistics.OrdersCount++;
+                var dbProduct = products.First(p => p.Id == cartItem.ProductId);
 
-                item.Product.Quantity -= item.Quantity;
+                var orderItem = new OrderItem(
+                    orderId: newOrder.Id,
+                    sellerId: dbProduct.Store.SellerId,
+                    storeId: dbProduct.StoreId,
+                    productId: dbProduct.Id,
+                    productName: dbProduct.Name,
+                    productPrice: dbProduct.Price,
+                    productQuantity: cartItem.Quantity
+                );
+
+                orderItems.Add(orderItem);
+
+                dbProduct.Quantity -= cartItem.Quantity;
+
+                if (dbProduct.Statistics != null)
+                    dbProduct.Statistics.OrdersCount++;
             }
 
-            _context.CartItems.RemoveRange(cart.Items);
+            newOrder.Items = orderItems;
+            _context.Orders.Add(newOrder);
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
+            await _cartService.ClearCartAsync(userId);
 
-            var orderItemResponseDTOS = orderItems
+            var orderItemResponseDTOs = orderItems
                 .Select(x => new OrderItemResponseDTO(x))
                 .ToList();
-         
-            return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOS));
+
+            return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOs));
         }
 
         public Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId)

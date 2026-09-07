@@ -61,7 +61,7 @@ namespace Application.Services
                     new ProductCartCardResponseDTO(p.Id, p.Name, p.Price, p.ShortDescription, p.PreviewUrl, cachedCart.CartItems[p.Id]))
                 .ToListAsync();
 
-            var cartResponse = new CartResponseDTO(cachedCart.UserId, products, products.Count, products.Sum(p => p.Quantity * p.PricePerUnit));
+            var cartResponse = new CartResponseDTO(cachedCart.UserId, products, products.Sum(p => p.Quantity), products.Sum(p => p.Quantity * p.PricePerUnit));
 
             return Result<CartResponseDTO>.Success(cartResponse);
         }
@@ -76,7 +76,9 @@ namespace Application.Services
             var cachedCart = cachedCartRequest.data!;
 
             cachedCart.CartItems.Remove(ProductId);
-           
+
+            await SaveRedis(cachedCart, UserId);
+
             return Result<string>.Success("OK");
         }
 
@@ -125,7 +127,7 @@ namespace Application.Services
             if (product == null)
                 return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
-            if (cachedCart.CartItems[ProductId] > product.Quantity)
+            if (cachedCart.CartItems[ProductId] < product.Quantity)
             {
                 cachedCart.CartItems[ProductId]++;
                 await SaveRedis(cachedCart, UserId);
@@ -143,8 +145,8 @@ namespace Application.Services
 
             var cachedCart = cachedCartRequest.data!;
 
-            if (!cachedCart.CartItems.ContainsKey(ProductId))
-                return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
+            if (cachedCart.CartItems.ContainsKey(ProductId))
+                return Result<ProductCartCardResponseDTO>.Error("Такой товар уже есть", ErrorType.NotFound);
 
             cachedCart.CartItems.Add(ProductId, 1);
 
@@ -157,6 +159,20 @@ namespace Application.Services
             await SaveRedis(cachedCart, UserId);
 
             return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
+        }
+
+        public async Task<Result<string>> ClearCartAsync(Ulid UserId)
+        {
+            var cachedCartRequest = await GetCartInCacheAsync(UserId);
+
+            if (!cachedCartRequest.IsSuccess)
+                return Result<string>.Error(cachedCartRequest.ErrorMessage!, (ErrorType)cachedCartRequest.ErrorType!);
+
+            var cachedCart = cachedCartRequest.data!;
+
+            bool isDeleted = await _redis.KeyDeleteAsync($"cart:user:{UserId}");
+
+            return isDeleted ? Result<string>.Success("OK") : Result<string>.Error("Мы не смогли очистить вашу корзину", ErrorType.Conflict);
         }
     }
 }
