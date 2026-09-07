@@ -54,8 +54,11 @@ namespace Application.Services
             var cart = await _context.Carts
                  .Include(x => x.Items)
                     .ThenInclude(x => x.Product)
+                        .ThenInclude(x => x.Statistics)
+                 .Include(x => x.Items)
+                    .ThenInclude(x => x.Product)
                         .ThenInclude(x => x.Store)
-                        .FirstOrDefaultAsync(x => x.UserId == UserId);
+                  .FirstOrDefaultAsync(x => x.UserId == UserId);
 
             if(cart == null)
                 return Result<OrderPreviewDTO>.Error("Корзина отсутствует", ErrorType.NotFound); // need to refactor and fix
@@ -71,7 +74,7 @@ namespace Application.Services
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            decimal totalPrice = cart.Items.Sum(x => x.PricePerUnit * x.Quantity);
+            decimal totalPrice = cart.Items.Sum(x => x.Product.Price * x.Quantity);
 
             var newOrder = new Order(UserId, totalPrice);
 
@@ -82,12 +85,16 @@ namespace Application.Services
             newOrder.Items = orderItems;
 
             _context.Orders.Add(newOrder);
-            _context.CartItems.RemoveRange(cart.Items);
 
             foreach (var item in cart.Items)
             {
+                if(item.Product.Statistics != null)
+                    item.Product.Statistics.OrdersCount++;
+
                 item.Product.Quantity -= item.Quantity;
             }
+
+            _context.CartItems.RemoveRange(cart.Items);
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
