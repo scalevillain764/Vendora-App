@@ -1,6 +1,6 @@
 # Vendora
 
-Vendora --- backend интернет-маркетплейса на ASP.NET Core. Проект
+Vendora - backend интернет-маркетплейса на ASP.NET Core. Проект
 построен вокруг REST API и разделён на несколько логических слоёв:
 Presentation, Application, Domain и Infrastructure.
 
@@ -105,7 +105,8 @@ Product / Store / Review / Question
 -   оплата с баланса;
 -   интеграция с YooKassa;
 -   получение курсов валют;
--   S3-хранилище через Garage.
+-   S3-хранилище через Garage
+-   корзина, выполненная полностью на Redis.
 
 ------------------------------------------------------------------------
 
@@ -127,7 +128,8 @@ Product / Store / Review / Question
   Docker                  Контейнеризация
   Docker Compose          Локальный запуск окружения
   ULID                    Идентификаторы сущностей
-
+  Redis                   Работа с корзиной
+  Serilog                 Логирование информации
 ------------------------------------------------------------------------
 
 ## Архитектура
@@ -731,16 +733,15 @@ docker compose down -v
 -   product statistics;
 -   exchange rates;
 -   S3-compatible image storage;
--   Docker environment.
+-   Docker environment
+-   Serilog
+-   Redis.
 
 В планах дальнейшего развития:
 
--   Redis;
 -   unit tests;
 -   integration tests;
--   улучшение логирования;
 -   дальнейшее развитие frontend-части;
--   дополнительные механизмы кеширования и оптимизации.
 
 ------------------------------------------------------------------------
 
