@@ -1,14 +1,12 @@
 ﻿using Application.DTO.OrderDTO;
-using Domain.Carts;
-using Domain.CartItems;
 using Application.Result;
 namespace Application.Interfaces
 {
     public interface IOrderService
     {
-        Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId);
-        Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId);
-        Task<Result<OrderResponseDTO>> ChangeOrderStatusToFailAsync(Ulid orderId);
-        Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId);
+        Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid UserId, CancellationToken token);
+        Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId, CancellationToken token);
+        Task<Result<OrderResponseDTO>> ChangeOrderStatusToFailAsync(Ulid orderId, CancellationToken token);
+        Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId, CancellationToken token);
     }
 }

@@ -43,7 +43,7 @@ namespace Application.Services
 
             return Result<CartCacheResponseDTO>.Success(deserializedCachedCart);
         }
-        public async Task<Result<CartResponseDTO>> GetMyCartAsync(Ulid UserId)
+        public async Task<Result<CartResponseDTO>> GetMyCartAsync(Ulid UserId, CancellationToken token)
         {
             var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
@@ -59,7 +59,7 @@ namespace Application.Services
                 .Where(p => Ids.Contains(p.Id))
                 .Select(p => 
                     new ProductCartCardResponseDTO(p.Id, p.Name, p.Price, p.ShortDescription, p.PreviewUrl, cachedCart.CartItems[p.Id]))
-                .ToListAsync();
+                .ToListAsync(token);
 
             var cartResponse = new CartResponseDTO(cachedCart.UserId, products, products.Sum(p => p.Quantity), products.Sum(p => p.Quantity * p.PricePerUnit));
 
@@ -82,7 +82,7 @@ namespace Application.Services
             return Result<string>.Success("OK");
         }
 
-        public async Task<Result<ProductCartCardResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid ProductId)
+        public async Task<Result<ProductCartCardResponseDTO>> DecreaseQuantityAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
         {
             var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
@@ -101,7 +101,7 @@ namespace Application.Services
             }
               
             var product = await _context.Products
-                .FindAsync(ProductId);
+                .FindAsync(ProductId, token);
 
             if(product == null)
                 return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -109,7 +109,7 @@ namespace Application.Services
             return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
         }
 
-        public async Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid ProductId)
+        public async Task<Result<ProductCartCardResponseDTO>> IncreaseQuantityAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
         {
             var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
@@ -122,7 +122,7 @@ namespace Application.Services
                 return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
             var product = await _context.Products
-                .FindAsync(ProductId);
+                .FindAsync(ProductId, token);
 
             if (product == null)
                 return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -136,7 +136,7 @@ namespace Application.Services
             return Result<ProductCartCardResponseDTO>.Success(new ProductCartCardResponseDTO(product, cachedCart.CartItems[ProductId]));
         }
 
-        public async Task<Result<ProductCartCardResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId)
+        public async Task<Result<ProductCartCardResponseDTO>> AddProductToCartAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
         {
             var cachedCartRequest = await GetCartInCacheAsync(UserId);
 
@@ -151,7 +151,7 @@ namespace Application.Services
             cachedCart.CartItems.Add(ProductId, 1);
 
             var product = await _context.Products
-                .FindAsync(ProductId);
+                .FindAsync(ProductId, token);
 
             if (product == null)
                 return Result<ProductCartCardResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -172,7 +172,8 @@ namespace Application.Services
 
             bool isDeleted = await _redis.KeyDeleteAsync($"cart:user:{UserId}");
 
-            return isDeleted ? Result<string>.Success("OK") : Result<string>.Error("Мы не смогли очистить вашу корзину", ErrorType.Conflict);
+            return isDeleted ?
+                Result<string>.Success("OK") : Result<string>.Error("Мы не смогли очистить вашу корзину", ErrorType.Conflict);
         }
     }
 }

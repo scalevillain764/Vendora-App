@@ -4,6 +4,6 @@ namespace Application.Interfaces
 {
     public interface IExchangeRateService
     {
-        Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync();
+        Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync(CancellationToken token);
     }
 }

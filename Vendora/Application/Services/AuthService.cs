@@ -10,7 +10,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using IAuthService = Application.Interfaces.IAuthService;
-using Domain.Carts;
 namespace Application.Services
 {
     public class AuthService : IAuthService
@@ -23,10 +22,10 @@ namespace Application.Services
             _context = context;
         }
 
-        public async Task<Result<UserRegistrationResponseDTO>> RegistrAsync(UserRegistrationDTO DTO)
+        public async Task<Result<UserRegistrationResponseDTO>> RegistrAsync(UserRegistrationDTO DTO, CancellationToken token)
         {
             var existingUser = await _context.Users
-                .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
+                .FirstOrDefaultAsync(x => x.Login == DTO.Login, token); // потом оптимизировать
 
             if(existingUser != null)
                 return Result<UserRegistrationResponseDTO>.Error("Пользователь с таким логином уже существует", ErrorType.Conflict);
@@ -34,18 +33,17 @@ namespace Application.Services
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(DTO.Password, workFactor: 11);
 
             var user = new User(DTO.Login, passwordHash);
-            var cart = new Cart(user.Id);
 
             _context.Users.Add(user);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserRegistrationResponseDTO>.Success(new UserRegistrationResponseDTO(user.Id, user.Login));
         }
-        public async Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO)
+        public async Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO, CancellationToken token)
         {
             var existingUser = await _context.Users
-             .FirstOrDefaultAsync(x => x.Login == DTO.Login); // потом оптимизировать
+             .FirstOrDefaultAsync(x => x.Login == DTO.Login, token); // потом оптимизировать
 
             if (existingUser == null)
                 return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -54,7 +52,7 @@ namespace Application.Services
                 return Result<AuthResponseDTO>.Error("Неверный пароль", ErrorType.Conflict);
 
             string accessToken = AppendCookiesAndGetAccessToken(existingUser);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<AuthResponseDTO>.Success(new AuthResponseDTO(existingUser.Id, accessToken));
         }
@@ -117,7 +115,7 @@ namespace Application.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId)
+        public async Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId, CancellationToken token)
         {
             string? existingRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
 
@@ -125,7 +123,7 @@ namespace Application.Services
                 return Result<AuthResponseDTO>.Error("Куки пусты", ErrorType.Unauthorized);
 
             var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Id == userId);
+                .FirstOrDefaultAsync(x => x.Id == userId, token);
 
             if (user == null)
                 return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.Unauthorized);
@@ -138,14 +136,14 @@ namespace Application.Services
 
             string AccessToken = AppendCookiesAndGetAccessToken(user);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
             return Result<AuthResponseDTO>.Success(new AuthResponseDTO(user.Id, AccessToken));
         }
 
-        public async Task<Result<AuthResponseDTO>> ChangeUserPasswordAsync(Ulid UserId, UserChangePasswordDTO DTO)
+        public async Task<Result<AuthResponseDTO>> ChangeUserPasswordAsync(Ulid UserId, UserChangePasswordDTO DTO, CancellationToken token)
         {
             var user = await _context.Users
-              .FindAsync(UserId);
+              .FindAsync(UserId, token);
 
             if (user == null)
                 return Result<AuthResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -158,16 +156,16 @@ namespace Application.Services
 
             string newAccess = AppendCookiesAndGetAccessToken(user);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<AuthResponseDTO>.Success(new AuthResponseDTO(user.Id, newAccess));
         }
 
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO)
+        public async Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO, CancellationToken token)
         {
             var user = await _context.Users
                .IgnoreQueryFilters()
-               .FirstOrDefaultAsync(x => x.Id == UserId);
+               .FirstOrDefaultAsync(x => x.Id == UserId, token);
 
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -176,7 +174,7 @@ namespace Application.Services
                 return Result<UserResponseForItselfDTO>.Error("Неверный пароль", ErrorType.Validation);
 
             bool loginExists = await _context.Users
-                .AnyAsync(x => x.Login == DTO.Login && x.Id != UserId);
+                .AnyAsync(x => x.Login == DTO.Login && x.Id != UserId, token);
 
             if (loginExists)
                 return Result<UserResponseForItselfDTO>.Error("Такой логин уже существует", ErrorType.Conflict);
@@ -184,12 +182,12 @@ namespace Application.Services
             user.Login = DTO.Login;
 
             int ordersMade = await _context.Orders
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             int reviewsLeft = await _context.ProductReviews
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
         }

@@ -11,7 +11,7 @@ namespace Application.Services
         {
             _factory = factory;
         }
-        public async Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync()
+        public async Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync(CancellationToken token)
         {
             List<string> target_keys = ["RUB", "USD", "BYN"];
             var client = _factory.CreateClient();
@@ -28,13 +28,13 @@ namespace Application.Services
 
             try
             {
-                var response = await client.GetAsync(CONNECTION_URL);
+                var response = await client.GetAsync(CONNECTION_URL, token);
 
                 if(response.IsSuccessStatusCode)
                 {
                     try
                     {
-                        responseDTO = await response.Content.ReadFromJsonAsync<ExchangeApiResponseDTO>();
+                        responseDTO = await response.Content.ReadFromJsonAsync<ExchangeApiResponseDTO>(token);
                     }
                     catch (OperationCanceledException oce)
                     {

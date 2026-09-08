@@ -4,11 +4,11 @@ using Application.Result;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
-using ISearchInterface = Application.Interfaces.ISearchService;
+using ISearchService = Application.Interfaces.ISearchService;
 using Application.PagedResponse;
 namespace Application.Services
 {
-    public class SearchService: ISearchInterface
+    public class SearchService: ISearchService
     {
         private readonly AppDbContext _context;
         public SearchService(AppDbContext context)
@@ -16,7 +16,7 @@ namespace Application.Services
             _context = context;
         }
 
-        public async Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO)
+        public async Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO, CancellationToken token)
         {
             var products = _context.Products
                 .Include(x => x.ProductReviews)
@@ -75,7 +75,7 @@ namespace Application.Services
                 .Skip((DTO.Page - 1) * DTO.PageSize)
                 .Take(DTO.PageSize)
                 .Select(x => new ProductCardDTO(x.Product, x.IsFav))
-                .ToListAsync();
+                .ToListAsync(token);
 
             return Result<PagedResponse<ProductCardDTO>>.Success(new PagedResponse<ProductCardDTO>(result, DTO.Page, DTO.PageSize, totalCount));
         }

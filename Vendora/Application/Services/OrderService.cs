@@ -19,18 +19,18 @@ namespace Application.Services
             _context = context;
             _cartService = cartService;
         }
-        private async Task<Result<OrderResponseDTO>> ChangeOrderStatusAsync(Ulid orderId, Action<Order> action)
+        private async Task<Result<OrderResponseDTO>> ChangeOrderStatusAsync(Ulid orderId, Action<Order> action, CancellationToken token)
         {
             var order = await _context.Orders
                     .Include(o => o.Items)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
+                    .FirstOrDefaultAsync(o => o.Id == orderId, token);
 
             if (order == null)
                 return Result<OrderResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
 
             action(order);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             var orderItemResponseDTOS = order.Items
                 .Select(x => new OrderItemResponseDTO(x))
@@ -39,20 +39,20 @@ namespace Application.Services
             return Result<OrderResponseDTO>.Success(new OrderResponseDTO(order, orderItemResponseDTOS));
         }
 
-        public async Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId) // pagination
+        public async Task<Result<List<OrderResponseDTO>>> GetMyOrdersAsync(Ulid UserId, CancellationToken token) // pagination
         {
             var my_orders = await _context.Orders
                 .Where(x => x.UserId == UserId)
                 .Select(x => new OrderResponseDTO(x,
                     x.Items.Select(i => new OrderItemResponseDTO(i)).ToList()))
-                .ToListAsync();
+                .ToListAsync(token);
 
             return Result<List<OrderResponseDTO>>.Success(my_orders);
         }
 
-        public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid userId)
+        public async Task<Result<OrderPreviewDTO>> CreatePendingOrderAsync(Ulid userId, CancellationToken token)
         {
-            var getMyCartRequest = await _cartService.GetMyCartAsync(userId);
+            var getMyCartRequest = await _cartService.GetMyCartAsync(userId, token);
 
             if (!getMyCartRequest.IsSuccess)
                 return Result<OrderPreviewDTO>.Error(getMyCartRequest.ErrorMessage!, (ErrorType)getMyCartRequest.ErrorType!);
@@ -68,7 +68,7 @@ namespace Application.Services
                 .Include(p => p.Store)
                 .Include(p => p.Statistics)
                 .Where(p => productIds.Contains(p.Id))
-                .ToListAsync();
+                .ToListAsync(token);
 
             foreach (var cartItem in myCart.cartItems)
             {
@@ -81,7 +81,7 @@ namespace Application.Services
                     return Result<OrderPreviewDTO>.Error($"Недостаточно товара '{dbProduct.Name}' на складе. Доступно: {dbProduct.Quantity}, в корзине: {cartItem.Quantity}", ErrorType.Conflict);
             }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync(token);
 
             decimal totalPrice = myCart.cartItems.Sum(x => x.PricePerUnit * x.Quantity);
             var newOrder = new Order(userId, totalPrice);
@@ -113,8 +113,8 @@ namespace Application.Services
             newOrder.Items = orderItems;
             _context.Orders.Add(newOrder);
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await _context.SaveChangesAsync(token);
+            await transaction.CommitAsync(token);
             await _cartService.ClearCartAsync(userId);
 
             var orderItemResponseDTOs = orderItems
@@ -124,10 +124,10 @@ namespace Application.Services
             return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOs));
         }
 
-        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId)
-            => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentCompleted);
+        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToSuccessAsync(Ulid orderId, CancellationToken token)
+            => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentCompleted, token);
 
-        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToFailAsync(Ulid orderId)
-              => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentFailed);
+        public Task<Result<OrderResponseDTO>> ChangeOrderStatusToFailAsync(Ulid orderId, CancellationToken token)
+              => ChangeOrderStatusAsync(orderId, order => order.Status = Order.OrderStatus.PaymentFailed, token);
     }
 }

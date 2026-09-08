@@ -5,15 +5,15 @@ namespace Application.Interfaces
 {
     public interface IUserService
     {
-        Task<Result<string>> DeleteMyAccountAsync(Ulid UserId);
-        Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId);
-        Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file);
+        Task<Result<string>> DeleteMyAccountAsync(Ulid UserId, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId, CancellationToken token);
+        Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file, CancellationToken token);
     }
 }

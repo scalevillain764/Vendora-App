@@ -21,40 +21,40 @@ namespace Application.Services
             _S3Service = S3Service;
         }
 
-        public async Task<Result<string>> RemoveMyStoreAsync(Ulid UserId)
+        public async Task<Result<string>> RemoveMyStoreAsync(Ulid UserId, CancellationToken token)
         {
             var store = await _context.Stores
-                .FirstOrDefaultAsync(x => x.SellerId == UserId);
+                .FirstOrDefaultAsync(x => x.SellerId == UserId, token);
 
             if (store == null)
                 return Result<string>.Error("Магазин не найден", ErrorType.NotFound);
 
             store.IsDeleted = true;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
             return Result<string>.Success("OK");
 
         }
 
-        private async Task<Result<StoreOwnerResponseDTO>> ChangeStorePropertyAsync(Ulid UserId, Action<Store> action)
+        private async Task<Result<StoreOwnerResponseDTO>> ChangeStorePropertyAsync(Ulid UserId, Action<Store> action, CancellationToken token)
         {
             var store = await _context.Stores
-                .FirstOrDefaultAsync(x => x.SellerId == UserId);
+                .FirstOrDefaultAsync(x => x.SellerId == UserId, token);
 
             if (store == null)
                 return Result<StoreOwnerResponseDTO>.Error("Магази не создан", ErrorType.Forbidden);
 
             action(store);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true));
         }
 
-        public async Task<Result<StoreOwnerResponseDTO>> CreateStoreAsync(Ulid UserId, StoreOwnerCreateDTO dto)
+        public async Task<Result<StoreOwnerResponseDTO>> CreateStoreAsync(Ulid UserId, StoreOwnerCreateDTO dto, CancellationToken token)
         {
             bool storeExists = await _context.Stores
-                .AnyAsync(x => x.SellerId == UserId);
+                .AnyAsync(x => x.SellerId == UserId, token);
 
             if (storeExists)
                 return Result<StoreOwnerResponseDTO>.Error("У вас уже существует магазин", ErrorType.Forbidden);
@@ -63,39 +63,41 @@ namespace Application.Services
 
             _context.Stores.Add(newStore);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(newStore, true));
         }
 
-        public async Task<Result<StoreOwnerResponseDTO>> GetMyStoreAsync(Ulid UserId)
+        public async Task<Result<StoreOwnerResponseDTO>> GetMyStoreAsync(Ulid UserId, CancellationToken token)
         {
             var store = await _context.Stores
-                .FirstOrDefaultAsync(x => x.SellerId == UserId);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SellerId == UserId, token);
 
             return store != null
                 ? Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true))
                 : Result<StoreOwnerResponseDTO>.Error("Магазин не создан", ErrorType.Forbidden);              
         }
 
-        public async Task<Result<StorePublicResponseDTO>> GetStoreAsync(Ulid StoreId)
+        public async Task<Result<StorePublicResponseDTO>> GetStoreAsync(Ulid StoreId, CancellationToken token)
         {
             var store = await _context.Stores
-                 .FirstOrDefaultAsync(x => x.Id == StoreId);
+                 .AsNoTracking()
+                 .FirstOrDefaultAsync(x => x.Id == StoreId, token);
 
             return store != null
                 ? Result<StorePublicResponseDTO>.Success(new StorePublicResponseDTO(store))
                 : Result<StorePublicResponseDTO>.Error("Магазин не найдкен", ErrorType.NotFound);
         }
 
-        public Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid UserId, StoreChangeNameDTO DTO) 
-            => ChangeStorePropertyAsync(UserId, x => x.Name = DTO.Name);
+        public Task<Result<StoreOwnerResponseDTO>> ChangeStoreNameAsync(Ulid UserId, StoreChangeNameDTO DTO, CancellationToken token) 
+            => ChangeStorePropertyAsync(UserId, x => x.Name = DTO.Name, token);
         
         // pics
-        public async Task<Result<StoreOwnerResponseDTO>> ChangeStoreAvatarAsync(Ulid UserId, IFormFile? file)
+        public async Task<Result<StoreOwnerResponseDTO>> ChangeStoreAvatarAsync(Ulid UserId, IFormFile? file, CancellationToken token)
         {
             var store = await _context.Stores
-                .FirstOrDefaultAsync(x => x.SellerId == UserId);
+                .FirstOrDefaultAsync(x => x.SellerId == UserId, token);
 
             if (store == null)
                 return Result<StoreOwnerResponseDTO>.Error("Магазин не найден", ErrorType.NotFound);
@@ -112,14 +114,14 @@ namespace Application.Services
             {
                 var loadPicture = await _S3Service.UploadPhotoAsync(file);
                 if (!loadPicture.IsSuccess)
-                    return Result<StoreOwnerResponseDTO>.Error(loadPicture.ErrorMessage, loadPicture.ErrorType ?? ErrorType.Conflict);
+                    return Result<StoreOwnerResponseDTO>.Error(loadPicture.ErrorMessage!, (ErrorType)loadPicture.ErrorType!);
                 new_url = loadPicture.data;
                 store.UrlAvatar = new_url;
             }
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(token);
             }
             catch
             {
@@ -128,11 +130,13 @@ namespace Application.Services
                 throw;
             }
 
-            await _S3Service.RemovePhotoByUrlAsync(old_url);
+            if(old_url != null)
+                await _S3Service.RemovePhotoByUrlAsync(old_url);
+
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true));
         }
 
-        public Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid UserId, StoreChangeDescriptionDTO DTO)
-           => ChangeStorePropertyAsync(UserId, x => x.Description = DTO.Description);
+        public Task<Result<StoreOwnerResponseDTO>> ChangeStoreDescriptionAsync(Ulid UserId, StoreChangeDescriptionDTO DTO, CancellationToken token)
+           => ChangeStorePropertyAsync(UserId, x => x.Description = DTO.Description, token);
     }
 }

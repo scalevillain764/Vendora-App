@@ -15,10 +15,10 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<UserQuestionResponseDTO>> AskQuestionAsync(Ulid UserId, Ulid ProductId, UserQuestionCreateAndChangeDTO DTO)
+        public async Task<Result<UserQuestionResponseDTO>> AskQuestionAsync(Ulid UserId, Ulid ProductId, UserQuestionCreateAndChangeDTO DTO, CancellationToken token)
         {
             var product = await _context.Products
-                .FindAsync(ProductId);
+                .FindAsync(ProductId, token);
 
             if (product == null)
                 return Result<UserQuestionResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -27,15 +27,15 @@ namespace Application.Services
 
             _context.UserQuestions.Add(question);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
         }
-        public async Task<Result<UserQuestionResponseDTO>> DeleteQuestionAsync(Ulid UserId, Ulid QuestionId)
+        public async Task<Result<UserQuestionResponseDTO>> DeleteQuestionAsync(Ulid UserId, Ulid QuestionId, CancellationToken token)
         {
             var question = await _context.UserQuestions
                 .Include(x => x.store)
-                .FirstOrDefaultAsync(x => x.Id == QuestionId);
+                .FirstOrDefaultAsync(x => x.Id == QuestionId, token);
 
             if (question == null)
                 return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
@@ -47,15 +47,15 @@ namespace Application.Services
 
             _context.UserQuestions.Remove(question);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserQuestionResponseDTO>.Success(dto);
         }
 
-        public async Task<Result<UserQuestionResponseDTO>> EditQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO)
+        public async Task<Result<UserQuestionResponseDTO>> EditQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionCreateAndChangeDTO DTO, CancellationToken token)
         {
             var question = await _context.UserQuestions
-                .FindAsync(QuestionId);
+                .FindAsync(QuestionId, token);
 
             if (question == null)
                 return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
@@ -67,16 +67,16 @@ namespace Application.Services
             question.PhotoUrls = DTO.PhotoUrl;
             question.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
         }
 
-        public async Task<Result<List<UserQuestionResponseDTO>>> GetUserQuestionsToProductAsync(Ulid UserId, Ulid ProductId)
+        public async Task<Result<List<UserQuestionResponseDTO>>> GetUserQuestionsToProductAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
         {
             var product = await _context.Products
                    .Include(x => x.Store)
-               .FirstOrDefaultAsync(x => x.Id == ProductId);
+               .FirstOrDefaultAsync(x => x.Id == ProductId, token);
 
             if (product == null)
                 return Result<List<UserQuestionResponseDTO>>.Error("Товар не найден", ErrorType.NotFound);
@@ -86,16 +86,16 @@ namespace Application.Services
             var rez = await _context.UserQuestions
                 .Where(x => x.ProductId == ProductId)
                 .Select(x => new UserQuestionResponseDTO(x, canReply))
-                .ToListAsync();
+                .ToListAsync(token);
 
             return Result<List<UserQuestionResponseDTO>>.Success(rez);
         }
 
-        public async Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionReplyDTO DTO)
+        public async Task<Result<UserQuestionResponseDTO>> ReplyUserQuestionAsync(Ulid UserId, Ulid QuestionId, UserQuestionReplyDTO DTO, CancellationToken token)
         {
             var question = await _context.UserQuestions
                 .Include(x => x.store)
-                .FirstOrDefaultAsync(x => x.Id == QuestionId);
+                .FirstOrDefaultAsync(x => x.Id == QuestionId, token);
 
             if (question == null)
                 return Result<UserQuestionResponseDTO>.Error("Вопрос не найден", ErrorType.NotFound);
@@ -105,7 +105,7 @@ namespace Application.Services
 
             question.SellerReply = DTO.SellerReply;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserQuestionResponseDTO>.Success(new UserQuestionResponseDTO(question, false));
         }

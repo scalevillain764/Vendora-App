@@ -6,10 +6,10 @@ namespace Application.Interfaces
 {
     public interface IAuthService
     {
-        Task<Result<UserRegistrationResponseDTO>> RegistrAsync(UserRegistrationDTO DTO);
-        Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO);
-        Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId);
-        Task<Result<AuthResponseDTO>> ChangeUserPasswordAsync(Ulid UserId, UserChangePasswordDTO DTO);
-        Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO);
+        Task<Result<UserRegistrationResponseDTO>> RegistrAsync(UserRegistrationDTO DTO, CancellationToken token);
+        Task<Result<AuthResponseDTO>> LogInAsync(UserLogInDTO DTO, CancellationToken token);
+        Task<Result<AuthResponseDTO>> RefreshAsync(Ulid userId, CancellationToken token);
+        Task<Result<AuthResponseDTO>> ChangeUserPasswordAsync(Ulid UserId, UserChangePasswordDTO DTO, CancellationToken token);
+        Task<Result<UserResponseForItselfDTO>> ChangeUserLoginAsync(Ulid UserId, UserChangeLoginDTO DTO, CancellationToken token);
     }
 }

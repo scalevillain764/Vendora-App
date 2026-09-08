@@ -15,7 +15,7 @@ namespace Application.Services
         {
             _context = context;
         }
-        public async Task<Result<ProductStatisticsDTO>> GetProductStatisticsAsync(Ulid UserId, Ulid StoreId, Ulid ProductId)
+        public async Task<Result<ProductStatisticsDTO>> GetProductStatisticsAsync(Ulid UserId, Ulid StoreId, Ulid ProductId, CancellationToken token)
         {
             var statistics = await _context.Products
                 .Include(x => x.Statistics)
@@ -23,7 +23,7 @@ namespace Application.Services
                 && x.StoreId == StoreId
                 && x.Id == ProductId)
                 .Select(x => x.Statistics)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
 
             if (statistics == null)
                 return Result<ProductStatisticsDTO>.Error("Увы, статистика не найдена", ErrorType.NotFound);

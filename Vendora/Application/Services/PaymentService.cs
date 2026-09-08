@@ -21,7 +21,7 @@ namespace Application.Services
             _orderService = orderService;
             _context = context;
         }
-        private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction)
+        private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction, CancellationToken token)
         {
             if (moneyTransaction.Status != Transaction.PaymentStatus.Success)
                 return false;
@@ -33,7 +33,7 @@ namespace Application.Services
 
             var statistics = await _context.ProductStatistics
                 .Where(x => productIds.Contains(x.ProductId))
-                .ToListAsync();
+                .ToListAsync(token);
 
             var statisticsByProductId = statistics
                 .ToDictionary(x => x.ProductId);
@@ -68,11 +68,11 @@ namespace Application.Services
 
             var sellers = await _context.Users
                 .Where(u => sellersId.Contains(u.Id))
-                .ToListAsync();
+                .ToListAsync(token);
 
             if (globalPayments.Count != sellers.Count)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(order.Id);
+                await _orderService.ChangeOrderStatusToFailAsync(order.Id, token);
                 moneyTransaction.Status = Transaction.PaymentStatus.Failed;
                 return false;
             }
@@ -82,23 +82,23 @@ namespace Application.Services
                 seller.Balance += globalPayments[seller.Id];
             }
 
-            await _orderService.ChangeOrderStatusToSuccessAsync(order.Id);
+            await _orderService.ChangeOrderStatusToSuccessAsync(order.Id, token);
             moneyTransaction.Status = Transaction.PaymentStatus.Success;
 
             return true;
         }
 
-        public async Task<Result<PaymentResponseDTO>> ConfirmYooKassaPaymentAsync(Ulid UserId, PaymentYooKassaRequestDTO DTO)
+        public async Task<Result<PaymentResponseDTO>> ConfirmYooKassaPaymentAsync(Ulid UserId, PaymentYooKassaRequestDTO DTO, CancellationToken token)
         {
             var moneyTransaction = await _context.Transactions
                 .Include(x => x.Order)
-                    .FirstOrDefaultAsync(x => x.ExternalPaymentId == DTO.obj.Id);
+                    .FirstOrDefaultAsync(x => x.ExternalPaymentId == DTO.obj.Id, token);
 
             if (moneyTransaction == null)
                 return Result<PaymentResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
 
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             if (user == null)
                 return Result<PaymentResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -108,46 +108,46 @@ namespace Application.Services
 
             using var transaction = await _context.Database.BeginTransactionAsync();
            
-            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction);
+            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction, token);
 
             if(!rez)
                 return Result<PaymentResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await _context.SaveChangesAsync(token);
+            await transaction.CommitAsync(token);
             return Result<PaymentResponseDTO>.Success(new PaymentResponseDTO(moneyTransaction.OrderId, "OK"));
         }
 
-        public async Task<Result<PaymentResponseDTO>> PayFromBalanceAsync(Ulid UserId, Ulid OrderId)
+        public async Task<Result<PaymentResponseDTO>> PayFromBalanceAsync(Ulid UserId, Ulid OrderId, CancellationToken token)
         {
             var order = await _context.Orders
                 .Include(x => x.Items)
-                .FirstOrDefaultAsync(x => x.Id == OrderId);
+                .FirstOrDefaultAsync(x => x.Id == OrderId, token);
 
             if (order == null)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
             }
                 
             if(order.UserId != UserId)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
             }
                 
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             if(user == null)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
             }
               
             if (user.Balance < order.TotalPrice)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentResponseDTO>.Error("Недостаточно средств", ErrorType.Validation);
             }
 
@@ -156,40 +156,40 @@ namespace Application.Services
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction);
+            bool rez = await CompletePaymentAsync(moneyTransaction.Order, user, moneyTransaction, token);
 
             if(!rez)
                 return Result<PaymentResponseDTO>.Error("Что-то пошло не так", ErrorType.Validation);
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await _context.SaveChangesAsync(token);
+            await transaction.CommitAsync(token);
             
             return Result<PaymentResponseDTO>.Success(new PaymentResponseDTO(OrderId, "OK"));
         }
 
-        public async Task<Result<PaymentYOOKassaResponseDTO>> PayFromYOOKassaAsync(Ulid UserId, Ulid OrderId)
+        public async Task<Result<PaymentYOOKassaResponseDTO>> PayFromYOOKassaAsync(Ulid UserId, Ulid OrderId, CancellationToken token)
         {
             var order = await _context.Orders
-                .FindAsync(OrderId);
+                .FindAsync(OrderId, token);
 
             if (order == null)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentYOOKassaResponseDTO>.Error("Заказ не найден", ErrorType.NotFound);
             }
 
             if (order.UserId != UserId)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentYOOKassaResponseDTO>.Error("Это не ваш заказ", ErrorType.Forbidden);
             }
 
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             if (user == null)
             {
-                await _orderService.ChangeOrderStatusToFailAsync(OrderId);
+                await _orderService.ChangeOrderStatusToFailAsync(OrderId, token);
                 return Result<PaymentYOOKassaResponseDTO>.Error("Пользователь не найден", ErrorType.NotFound);
             }
 
@@ -222,7 +222,7 @@ namespace Application.Services
                 string paymentUrl = response.Confirmation.ConfirmationUrl;
                 moneyTransaction.ExternalPaymentId = response.Id;
 
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(token);
                 return Result<PaymentYOOKassaResponseDTO>.Success(new PaymentYOOKassaResponseDTO(order.Id, response.Id, paymentUrl));
             }
             catch (Exception ex)

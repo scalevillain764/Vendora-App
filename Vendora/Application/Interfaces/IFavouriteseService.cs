@@ -6,8 +6,8 @@ namespace Application.Interfaces
 {
     public interface IFavouriteService
     {
-        Task<Result<FavoriteResponseDTO>> AddToFavouriteAsync(Ulid UserId, Ulid ProductId);
-        Task<Result<FavoriteResponseDTO>> RemoveFromFavouriteAsync(Ulid UserId, Ulid ProductId);
-        Task<Result<List<ProductCardDTO>>> GetFavouritesByIdAsync(Ulid UserId);
+        Task<Result<FavoriteResponseDTO>> AddToFavouriteAsync(Ulid UserId, Ulid ProductId, CancellationToken token);
+        Task<Result<FavoriteResponseDTO>> RemoveFromFavouriteAsync(Ulid UserId, Ulid ProductId, CancellationToken token);
+        Task<Result<List<ProductCardDTO>>> GetFavouritesByIdAsync(Ulid UserId, CancellationToken token);
     }
 }

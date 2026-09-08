@@ -22,26 +22,26 @@ namespace Application.Services
             _context = context;
             _S3Service = S3Service;
         }
-        private async Task<Result<ProductResponseDTO>> ChangeProductProperty(Ulid UserId, Ulid ProductId, Action<Product> action)
+        private async Task<Result<ProductResponseDTO>> ChangeProductProperty(Ulid UserId, Ulid ProductId, Action<Product> action, CancellationToken token)
         {
             var product = await _context.Products
                 .Include(x => x.ProductReviews)
-                .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
+                .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId, token);
 
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
 
             action(product);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
-        public async Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO)
+        public async Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO, CancellationToken token)
         {
             var storeId = await _context.Stores
                 .Where(s => s.SellerId == UserId)
                 .Select(x => x.Id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(token);
 
             if (storeId == default)
                 return Result<ProductResponseDTO>.Error("Сначала создайте магазин", ErrorType.Forbidden); 
@@ -51,21 +51,21 @@ namespace Application.Services
                 DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
 
             _context.Products.Add(newProduct);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync(token); 
 
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(newProduct, true));
         }
-        public Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId)
-            => ChangeProductProperty(UserId, ProductId, x => x.IsDeleted = true);
+        public Task<Result<ProductResponseDTO>> RemoveProductAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
+            => ChangeProductProperty(UserId, ProductId, x => x.IsDeleted = true, token);
         
         // pics
-        public Task<Result<ProductResponseDTO>> AddPicturesToProductAsync(Ulid UserId, Ulid ProductId, ProductAddPicturesDTO DTO)
-            => ChangeProductProperty(UserId, ProductId, x => x.Pictures.AddRange(DTO.pictures)); // load new pics for product, after creating e.g.
+        public Task<Result<ProductResponseDTO>> AddPicturesToProductAsync(Ulid UserId, Ulid ProductId, ProductAddPicturesDTO DTO, CancellationToken token)
+            => ChangeProductProperty(UserId, ProductId, x => x.Pictures.AddRange(DTO.pictures), token); // load new pics for product, after creating e.g.
 
-        public async Task<Result<ProductResponseDTO>> RemovePictureFromProduct(Ulid UserId, Ulid ProductId, ProductRemovePictureDTO DTO) // rempve picture from product, after creaing e.g. 
+        public async Task<Result<ProductResponseDTO>> RemovePictureFromProduct(Ulid UserId, Ulid ProductId, ProductRemovePictureDTO DTO, CancellationToken token) // rempve picture from product, after creaing e.g. 
         {
             var product = await _context.Products
-                .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId);
+                .FirstOrDefaultAsync(x => x.Id == ProductId && x.Store.SellerId == UserId, token);
 
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -85,31 +85,31 @@ namespace Application.Services
 
             product.Pictures.Remove(DTO.fileURL);
             
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
 
-        public async Task<Result<PagedResponse<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, ProductsGetFromStoreDTO DTO)
+        public async Task<Result<PagedResponse<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, ProductsGetFromStoreDTO DTO, CancellationToken token)
         {
             var query = _context.Products
                 .Where(x => x.StoreId == DTO.StoreId);
 
-            int totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync(token);
 
             var rez = await query
                 .Skip((DTO.page - 1) * DTO.pageSize)
                 .Take(DTO.pageSize)
                 .Select(x => new ProductResponseDTO(x, x.Store.SellerId == UserId))
-                .ToListAsync();
+                .ToListAsync(token);
 
             return Result<PagedResponse<ProductResponseDTO>>.Success(new PagedResponse<ProductResponseDTO>(rez, DTO.page, DTO.pageSize, totalCount));
         }               
 
-        public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file) // change preview after creating e.g
+        public async Task<Result<ProductResponseDTO>> ChangeProductPreviewPictureAsync(Ulid UserId, Ulid ProductId, IFormFile? file, CancellationToken token) // change preview after creating e.g
         {
             var product = await _context.Products
                 .Include(x => x.Store)
-                .FirstOrDefaultAsync(x => x.Id == ProductId);
+                .FirstOrDefaultAsync(x => x.Id == ProductId, token);
 
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -138,7 +138,7 @@ namespace Application.Services
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(token);
             }
             catch
             {
@@ -154,11 +154,11 @@ namespace Application.Services
         }
         // pics
 
-        public async Task<Result<ProductResponseDTO>> GetProductAsync(Ulid UserId, Ulid ProductId)
+        public async Task<Result<ProductResponseDTO>> GetProductAsync(Ulid UserId, Ulid ProductId, CancellationToken token)
         {
             var product = await _context.Products
                 .Include(x => x.Store)
-                .FirstOrDefaultAsync(x => x.Id == ProductId);
+                .FirstOrDefaultAsync(x => x.Id == ProductId, token);
 
             if (product == null)
                 return Result<ProductResponseDTO>.Error("Продукт не найден", ErrorType.NotFound);
@@ -167,22 +167,22 @@ namespace Application.Services
                 new ProductResponseDTO(product, product.Store.SellerId == UserId));
         }
 
-        public Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO)
-            =>  ChangeProductProperty(UserId, ProductId, x => x.Name = DTO.Name);
+        public Task<Result<ProductResponseDTO>> ChangeProductNameAsync(Ulid UserId, Ulid ProductId, ProductChangeNameDTO DTO, CancellationToken token)
+            =>  ChangeProductProperty(UserId, ProductId, x => x.Name = DTO.Name, token);
 
-        public Task<Result<ProductResponseDTO>> ChangeProductCategoryAsync(Ulid UserId, Ulid ProductId, ProductChangeCategoryDTO DTO)
-            => ChangeProductProperty(UserId, ProductId, x => x.Category = (Product.ProductCategory)DTO.Category);
+        public Task<Result<ProductResponseDTO>> ChangeProductCategoryAsync(Ulid UserId, Ulid ProductId, ProductChangeCategoryDTO DTO, CancellationToken token)
+            => ChangeProductProperty(UserId, ProductId, x => x.Category = (Product.ProductCategory)DTO.Category, token);
 
-        public Task<Result<ProductResponseDTO>> ChangeProductQuantityAsync(Ulid UserId, Ulid ProductId, ProductChangeQuantityDTO DTO)
-            =>  ChangeProductProperty(UserId, ProductId, x => x.Quantity = DTO.Quantity);
+        public Task<Result<ProductResponseDTO>> ChangeProductQuantityAsync(Ulid UserId, Ulid ProductId, ProductChangeQuantityDTO DTO, CancellationToken token)
+            =>  ChangeProductProperty(UserId, ProductId, x => x.Quantity = DTO.Quantity, token);
 
-        public Task<Result<ProductResponseDTO>> ChangeProductDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeDescriptionDTO DTO) 
-            => ChangeProductProperty(UserId, ProductId, x => x.Description = DTO.Description);
+        public Task<Result<ProductResponseDTO>> ChangeProductDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeDescriptionDTO DTO, CancellationToken token) 
+            => ChangeProductProperty(UserId, ProductId, x => x.Description = DTO.Description, token);
 
-        public Task<Result<ProductResponseDTO>> ChangeProductPriceAsync(Ulid UserId, Ulid ProductId, ProductChangePriceDTO DTO)
-            => ChangeProductProperty(UserId, ProductId, x => x.Price = DTO.Price);
+        public Task<Result<ProductResponseDTO>> ChangeProductPriceAsync(Ulid UserId, Ulid ProductId, ProductChangePriceDTO DTO, CancellationToken token)
+            => ChangeProductProperty(UserId, ProductId, x => x.Price = DTO.Price, token);
 
-        public Task<Result<ProductResponseDTO>> ChangeProductShortDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeShortDescriptionDTO DTO)
-           => ChangeProductProperty(UserId, ProductId, x => x.ShortDescription = DTO.shortDescription);
+        public Task<Result<ProductResponseDTO>> ChangeProductShortDescriptionAsync(Ulid UserId, Ulid ProductId, ProductChangeShortDescriptionDTO DTO, CancellationToken token)
+           => ChangeProductProperty(UserId, ProductId, x => x.ShortDescription = DTO.shortDescription, token);
     }
 }

@@ -6,6 +6,6 @@ namespace Application.Interfaces
 {
     public interface ISearchService
     {
-        Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO);
+        Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO, CancellationToken token);
     }
 }

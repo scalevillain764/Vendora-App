@@ -8,6 +8,7 @@ using Domain.Products;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using Yandex.Checkout.V3;
 using IS3Service = Application.Interfaces.IS3Service;
 using IUserService = Application.Interfaces.IUserService;
@@ -22,10 +23,10 @@ namespace Application.Services
             _context = context;
             _S3Service = S3Service;
         }
-        private async Task<Result<UserResponseForItselfDTO>> ChangeUserPropertyAsync(Ulid UserId, Action<User> action) 
+        private async Task<Result<UserResponseForItselfDTO>> ChangeUserPropertyAsync(Ulid UserId, Action<User> action, CancellationToken token) 
         {
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -33,20 +34,20 @@ namespace Application.Services
             action(user);
 
             int ordersMade = await _context.Orders
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             int reviewsLeft = await _context.ProductReviews
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
         }
-        public async Task<Result<string>> DeleteMyAccountAsync(Ulid UserId)
+        public async Task<Result<string>> DeleteMyAccountAsync(Ulid UserId, CancellationToken token)
         {
             var user = await _context.Users
                 .Include(x => x.Store)
-                .FirstOrDefaultAsync(x => x.Id == UserId);
+                .FirstOrDefaultAsync(x => x.Id == UserId, token);
 
             if (user == null)
                 return Result<string>.Error("Что-то пошло не так", ErrorType.NotFound);
@@ -56,57 +57,57 @@ namespace Application.Services
 
             user.IsDeleted = true;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
 
             return Result<string>.Success("OK");
         }
-        public async Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId) // just get main data about user
+        public async Task<Result<UserResponseForItselfDTO>> GetMeAsync(Ulid UserId, CancellationToken token) // just get main data about user
         {
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             int ordersMade = await _context.Orders
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             int reviewsLeft = await _context.ProductReviews
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             return user != null ? Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft))
                 : Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
         }
 
-        public async Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId)
+        public async Task<Result<UserResponseForOthersDTO>> GetUserAsync(Ulid UserId, CancellationToken token)
         {
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             return user != null ? Result<UserResponseForOthersDTO>.Success(new UserResponseForOthersDTO(user))
                 : Result<UserResponseForOthersDTO>.Error("Пользователь не найден", ErrorType.NotFound);
         }
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO)
-            => ChangeUserPropertyAsync(UserId, u => u.ProfileName = DTO.ProfileName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserProfileNameAsync(Ulid UserId, UserChangeProfileNameDTO DTO, CancellationToken token)
+            => ChangeUserPropertyAsync(UserId, u => u.ProfileName = DTO.ProfileName, token);
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO)
-           =>  ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO, CancellationToken token)
+           =>  ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName, token);
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO)
-            => ChangeUserPropertyAsync(UserId, u => u.LastName = DTO.LastName);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO, CancellationToken token)
+            => ChangeUserPropertyAsync(UserId, u => u.LastName = DTO.LastName, token);
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO)
-            => ChangeUserPropertyAsync(UserId, u => u.Email = DTO.Email);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserEmailAsync(Ulid UserId, UserChangeEmailDTO DTO, CancellationToken token)
+            => ChangeUserPropertyAsync(UserId, u => u.Email = DTO.Email, token);
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO)
-           => ChangeUserPropertyAsync(UserId, u => u.Phone = DTO.Phone);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserPhoneAsync(Ulid UserId, UserChangePhoneDTO DTO, CancellationToken token)
+           => ChangeUserPropertyAsync(UserId, u => u.Phone = DTO.Phone, token);
 
-        public Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO)
-            => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender);
+        public Task<Result<UserResponseForItselfDTO>> ChangeUserGenderAsync(Ulid UserId, UserChangeGenderDTO DTO, CancellationToken token)
+            => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender, token);
 
         // pictures
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file)
+        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file, CancellationToken token)
         {
             var user = await _context.Users
-                .FindAsync(UserId);
+                .FindAsync(UserId, token);
 
             if (user == null)
                 return Result<UserResponseForItselfDTO>.Error("Пользователь не найден", ErrorType.NotFound);
@@ -130,7 +131,7 @@ namespace Application.Services
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(token);
             } 
             catch
             {
@@ -143,10 +144,10 @@ namespace Application.Services
                 await _S3Service.RemovePhotoByUrlAsync(oldUrl);
 
             int ordersMade = await _context.Orders
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             int reviewsLeft = await _context.ProductReviews
-                .CountAsync(x => x.UserId == UserId);
+                .CountAsync(x => x.UserId == UserId, token);
 
             return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
         }      
