@@ -16,10 +16,12 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private readonly IOrderService _orderService;
-        public PaymentService(AppDbContext context, IOrderService orderService)
+        private readonly ILogger<PaymentService> _logger;
+        public PaymentService(AppDbContext context, IOrderService orderService, ILogger<PaymentService> logger)
         {
             _orderService = orderService;
             _context = context;
+            _logger = logger;
         }
         private async Task<bool> CompletePaymentAsync(Order order, User user, Transaction moneyTransaction, CancellationToken token)
         {
@@ -163,7 +165,9 @@ namespace Application.Services
 
             await _context.SaveChangesAsync(token);
             await transaction.CommitAsync(token);
-            
+
+            _logger.LogInformation("User №{UserId} created transaction №{TransactionId} with order №{OrderId}", UserId, moneyTransaction.Id, OrderId);
+
             return Result<PaymentResponseDTO>.Success(new PaymentResponseDTO(OrderId, "OK"));
         }
 

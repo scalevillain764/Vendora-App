@@ -7,9 +7,11 @@ namespace Application.Services
     public class ExchangeRateService : IExchangeRateService
     {
         private readonly IHttpClientFactory _factory;
-        public ExchangeRateService(IHttpClientFactory factory)
+        private readonly ILogger<ExchangeRateService> _logger;
+        public ExchangeRateService(IHttpClientFactory factory, ILogger<ExchangeRateService> logger)
         {
             _factory = factory;
+            _logger = logger;
         }
         public async Task<Result<ExchangeUserResponseDTO>> GetExchangeRatesAsync(CancellationToken token)
         {
@@ -38,16 +40,16 @@ namespace Application.Services
                     }
                     catch (OperationCanceledException oce)
                     {
-                        Console.WriteLine($"Parse error: {oce.Message}");
+                        _logger.LogError(oce.Message);
                     }
                 }
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Network error during creating request: {ex.Message}");
+                _logger.LogError("Network error during creating request: " + ex.Message);
             }
 
-            if (responseDTO.ConversionRates.Count == 0)
+            if (responseDTO!.ConversionRates.Count == 0)
                 return Result<ExchangeUserResponseDTO>.Error("Ошибка загрузки валюты", ErrorType.Conflict);
 
             var rez = responseDTO.ConversionRates

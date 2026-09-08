@@ -1,15 +1,9 @@
-﻿using Amazon.S3;
-using Amazon.S3.Model;
-using Application.DTO.ProductDTO.StoreDTO;
-using Application.DTO.UserDTO;
+﻿using Application.DTO.UserDTO;
 using Application.Result;
 using Domain.ErrorTypes;
-using Domain.Products;
 using Domain.Users;
 using Infrastructure.AppDbContexts;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
-using Yandex.Checkout.V3;
 using IS3Service = Application.Interfaces.IS3Service;
 using IUserService = Application.Interfaces.IUserService;
 namespace Application.Services
@@ -23,7 +17,7 @@ namespace Application.Services
             _context = context;
             _S3Service = S3Service;
         }
-        private async Task<Result<UserResponseForItselfDTO>> ChangeUserPropertyAsync(Ulid UserId, Action<User> action, CancellationToken token) 
+        private async Task<Result<UserResponseForItselfDTO>> ChangeUserPropertyAsync(Ulid UserId, Action<User> action, CancellationToken token)
         {
             var user = await _context.Users
                 .FindAsync(UserId, token);
@@ -89,7 +83,7 @@ namespace Application.Services
             => ChangeUserPropertyAsync(UserId, u => u.ProfileName = DTO.ProfileName, token);
 
         public Task<Result<UserResponseForItselfDTO>> ChangeUserFirstNameAsync(Ulid UserId, UserChangeFirstNameDTO DTO, CancellationToken token)
-           =>  ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName, token);
+           => ChangeUserPropertyAsync(UserId, u => u.FirstName = DTO.FirstName, token);
 
         public Task<Result<UserResponseForItselfDTO>> ChangeUserLastNameAsync(Ulid UserId, UserChangeLastNameDTO DTO, CancellationToken token)
             => ChangeUserPropertyAsync(UserId, u => u.LastName = DTO.LastName, token);
@@ -115,7 +109,7 @@ namespace Application.Services
             string? oldUrl = user.AvatarUrl;
             string? newUrl = null;
 
-            if(file == null)
+            if (file == null)
             {
                 if (user.AvatarUrl != null)
                     user.AvatarUrl = null;
@@ -132,7 +126,7 @@ namespace Application.Services
             try
             {
                 await _context.SaveChangesAsync(token);
-            } 
+            }
             catch
             {
                 if (newUrl != null)
@@ -150,7 +144,7 @@ namespace Application.Services
                 .CountAsync(x => x.UserId == UserId, token);
 
             return Result<UserResponseForItselfDTO>.Success(new UserResponseForItselfDTO(user, ordersMade, reviewsLeft));
-        }      
-       // pics
-    } 
+        }
+        // pics
+    }
 }

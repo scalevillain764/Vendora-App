@@ -1,20 +1,23 @@
 ﻿using Application.DTO.ProductDTO.StoreDTO;
 using Application.DTO.ProductReviewDTO;
 using Application.Result;
-using Domain.ProductReviews;
 using Domain.ErrorTypes;
+using Domain.ProductReviews;
+using Domain.Products;
 using Infrastructure.AppDbContexts;
-using IProductReviewService = Application.Interfaces.IProductReviewService;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
+using IProductReviewService = Application.Interfaces.IProductReviewService;
 namespace Application.Services
 {
     public class ProductReviewService : IProductReviewService
     {
         private readonly AppDbContext _context;
-        public ProductReviewService(AppDbContext context)
+        private readonly ILogger<ProductReviewService> _logger;
+        public ProductReviewService(AppDbContext context, ILogger<ProductReviewService> logger)
         {
             _context = context;
+            _logger = logger;
         }
         public async Task<Result<ProductReviewResponseDTO>> AddProductReviewAsync(Ulid UserId, Ulid ProductId, ProductReviewCreationAndChangeDTO DTO, CancellationToken token)
         {
@@ -37,17 +40,20 @@ namespace Application.Services
                 .Select(x => x.Order)
                 .FirstOrDefaultAsync(x => x.UserId == UserId, token);
 
-            if (order == null || order.Status == Domain.Orders.Order.OrderStatus.Pending 
-                        ||  order.Status == Domain.Orders.Order.OrderStatus.PaymentFailed
-                        || order.Status == Domain.Orders.Order.OrderStatus.Refunded
-                        || order.Status == Domain.Orders.Order.OrderStatus.InDelivery)
-                return Result<ProductReviewResponseDTO>.Error("Сначала приорбретите товар", ErrorType.Forbidden);
+            if (order == null 
+                || order.Status == Domain.Orders.Order.OrderStatus.Pending 
+                || order.Status == Domain.Orders.Order.OrderStatus.PaymentFailed
+                || order.Status == Domain.Orders.Order.OrderStatus.Refunded
+                || order.Status == Domain.Orders.Order.OrderStatus.InDelivery)
+           return Result<ProductReviewResponseDTO>.Error("Сначала приорбретите товар", ErrorType.Forbidden);
 
             var review = new ProductReview(UserId, ProductId, storeId.Value, DTO.ReviewText, DTO.Rating, DTO.PhotoUrl);
 
             _context.ProductReviews.Add(review);
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} created review №{ReviewId} for product №{ProductId}", UserId, review.Id, ProductId);
 
             return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
         }
@@ -69,6 +75,8 @@ namespace Application.Services
 
             await _context.SaveChangesAsync(token);
 
+            _logger.LogInformation("User №{UserId} removed review №{ReviewId}", UserId, ReviewId);
+
             return Result<ProductReviewResponseDTO>.Success(DTO);
         }
 
@@ -89,6 +97,8 @@ namespace Application.Services
             review.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} eddited review №{ReviewId}", UserId, ReviewId);
 
             return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
         }
@@ -127,6 +137,8 @@ namespace Application.Services
             review.SellerReply = DTO.SellerReply;
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} replied to product review №{ReviewId}", UserId, ReviewId);
 
             return Result<ProductReviewResponseDTO>.Success(new ProductReviewResponseDTO(review, false));
         }

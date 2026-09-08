@@ -15,10 +15,12 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private readonly IS3Service _S3Service;
-        public StoreService(AppDbContext context, IS3Service S3Service)
+        private readonly ILogger<StoreService> _logger;
+        public StoreService(AppDbContext context, IS3Service S3Service, ILogger<StoreService> logger)
         {
             _context = context;
             _S3Service = S3Service;
+            _logger = logger;
         }
 
         public async Task<Result<string>> RemoveMyStoreAsync(Ulid UserId, CancellationToken token)
@@ -32,6 +34,9 @@ namespace Application.Services
             store.IsDeleted = true;
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} remove store №{StoreId}", UserId, store.Id);
+
             return Result<string>.Success("OK");
 
         }
@@ -47,6 +52,8 @@ namespace Application.Services
             action(store);
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} eddited store №{StoreId}", UserId, store.Id);
 
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(store, true));
         }
@@ -64,6 +71,8 @@ namespace Application.Services
             _context.Stores.Add(newStore);
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} created store №{StoreId}", UserId, newStore.Id);
 
             return Result<StoreOwnerResponseDTO>.Success(new StoreOwnerResponseDTO(newStore, true));
         }

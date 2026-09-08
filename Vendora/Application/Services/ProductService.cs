@@ -17,10 +17,12 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private readonly IS3Service _S3Service;
-        public ProductService(AppDbContext context, IS3Service S3Service)
+        private readonly ILogger<ProductService> _logger;
+        public ProductService(AppDbContext context, IS3Service S3Service, ILogger<ProductService> logger)
         {
             _context = context;
             _S3Service = S3Service;
+            _logger = logger;
         }
         private async Task<Result<ProductResponseDTO>> ChangeProductProperty(Ulid UserId, Ulid ProductId, Action<Product> action, CancellationToken token)
         {
@@ -34,6 +36,9 @@ namespace Application.Services
             action(product);
 
             await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} edited product №{ProductId}", UserId, ProductId);
+
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(product, true));
         }
         public async Task<Result<ProductResponseDTO>> CreateProductAsync(Ulid UserId, ProductCreationDTO DTO, CancellationToken token)
@@ -51,7 +56,9 @@ namespace Application.Services
                 DTO.Quantity, DTO.PreviewUrl, DTO.Pictures);
 
             _context.Products.Add(newProduct);
-            await _context.SaveChangesAsync(token); 
+            await _context.SaveChangesAsync(token);
+
+            _logger.LogInformation("User №{UserId} created product №{ProductId}", UserId, newProduct.Id);
 
             return Result<ProductResponseDTO>.Success(new ProductResponseDTO(newProduct, true));
         }

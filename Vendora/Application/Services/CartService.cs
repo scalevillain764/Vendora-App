@@ -18,7 +18,6 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private readonly IDatabase _redis;
-
         public CartService(AppDbContext context, IConnectionMultiplexer redis)
         {
             _context = context;

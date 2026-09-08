@@ -10,14 +10,14 @@ using dotenv.net;
 using FluentValidation;
 using FluentValidation.Validators;
 using Infrastructure.AppDbContexts;
-
-// microsoft
-using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.IdentityModel.Tokens;
+// microsoft
+using Microsoft.OpenApi;
 using Presentation.ExceptionMiddlewares;
+using Serilog;
 using SharpGrip.FluentValidation.AutoValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.IdentityModel.Tokens.Jwt;
@@ -31,6 +31,15 @@ namespace Vendora
         {
             DotEnv.Load();
             var builder = WebApplication.CreateBuilder(args);
+
+            // serilog
+            builder.Host.UseSerilog((context, configuration) =>
+            {
+                configuration
+                    .ReadFrom.Configuration(context.Configuration)
+                    .WriteTo.Console()
+                    .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day);
+            });
 
             // Add services to the container.
             builder.Services.AddRazorPages();

@@ -1,5 +1,4 @@
 ﻿using Domain.ErrorTypes;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Application.Result
 {
     public class Result<T> where T : class

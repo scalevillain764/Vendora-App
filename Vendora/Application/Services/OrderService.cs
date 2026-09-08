@@ -14,10 +14,12 @@ namespace Application.Services
     {
         private readonly AppDbContext _context;
         private readonly ICartService _cartService;
-        public OrderService(AppDbContext context, ICartService cartService)
+        private readonly ILogger<OrderService> _logger;
+        public OrderService(AppDbContext context, ICartService cartService, ILogger<OrderService> logger)
         {
             _context = context;
             _cartService = cartService;
+            _logger = logger;
         }
         private async Task<Result<OrderResponseDTO>> ChangeOrderStatusAsync(Ulid orderId, Action<Order> action, CancellationToken token)
         {
@@ -120,6 +122,8 @@ namespace Application.Services
             var orderItemResponseDTOs = orderItems
                 .Select(x => new OrderItemResponseDTO(x))
                 .ToList();
+
+            _logger.LogInformation("User №{UserId} created order №{OrderId}", userId, newOrder.Id);
 
             return Result<OrderPreviewDTO>.Success(new OrderPreviewDTO(newOrder, orderItemResponseDTOs));
         }
