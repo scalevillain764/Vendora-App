@@ -1,5 +1,4 @@
 ﻿using Domain.Stores;
-using Domain.CartItems;
 using Domain.Users;
 using Domain.UserQuestions;
 using Domain.ProductReviews;
@@ -15,7 +14,6 @@ namespace Domain.Products
         public Ulid StoreId { get; private set; }
         public Store Store { get; set; } = null!;
 
-        public List<CartItem> CartItems { get; private set; } = new();
         public List<OrderItem> OrderItems { get; private set; } = new();
         public List<ProductReview> ProductReviews { get; private set; } = new();
         public List<UserQuestion> UserQuestions { get; private set; } = new();

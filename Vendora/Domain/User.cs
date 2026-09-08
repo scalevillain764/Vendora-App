@@ -1,5 +1,4 @@
-﻿using Domain.Carts;
-using Domain.Stores;
+﻿using Domain.Stores;
 using Domain.Orders;
 using Domain.ProductReviews;
 namespace Domain.Users
