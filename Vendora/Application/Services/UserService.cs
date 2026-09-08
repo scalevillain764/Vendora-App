@@ -104,7 +104,7 @@ namespace Application.Services
             => ChangeUserPropertyAsync(UserId, u => u.UserGender = (User.Gender)DTO.Gender, token);
 
         // pictures
-        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile file, CancellationToken token)
+        public async Task<Result<UserResponseForItselfDTO>> ChangeUserProfilePictureAsync(Ulid UserId, IFormFile? file, CancellationToken token)
         {
             var user = await _context.Users
                 .FindAsync(UserId, token);

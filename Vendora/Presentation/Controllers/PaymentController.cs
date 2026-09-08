@@ -16,17 +16,17 @@ namespace Presentation.Controllers
         [HttpPost]
         [Route("yookassa/webhook")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmYooKassaWebhook(PaymentYooKassaRequestDTO DTO)
-            => ProcessResult(await _paymentService.ConfirmYooKassaPaymentAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ConfirmYooKassaWebhook([FromBody] PaymentYooKassaRequestDTO DTO, CancellationToken token)
+            => ProcessResult(await _paymentService.ConfirmYooKassaPaymentAsync(CurrentUserId, DTO, token));
 
         [HttpPost]
-        [Route("balance/{OrderId}")]
-        public async Task<IActionResult> PayFromBalance(Ulid OrderId)
-            => ProcessResult(await _paymentService.PayFromBalanceAsync(CurrentUserId, OrderId));
+        [Route("{orderId}/balance")]
+        public async Task<IActionResult> PayFromBalance(Ulid orderId, CancellationToken token)
+            => ProcessResult(await _paymentService.PayFromBalanceAsync(CurrentUserId, orderId, token));
 
         [HttpPost]
-        [Route("yookassa/init/{OrderId}")]
-        public async Task<IActionResult> PayFromYookassa(Ulid OrderId)
-            => ProcessResult(await _paymentService.PayFromYOOKassaAsync(CurrentUserId, OrderId));
+        [Route("{orderId}/yookassa/init")]
+        public async Task<IActionResult> PayFromYookassa([FromRoute] Ulid orderId, CancellationToken token)
+            => ProcessResult(await _paymentService.PayFromYOOKassaAsync(CurrentUserId, orderId, token));
     }
 }

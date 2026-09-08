@@ -16,8 +16,8 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        [Route("{StoreId}/{ProductId}")]
-        public async Task<IActionResult> GetStatistics(Ulid StoreId, Ulid ProductId)
-            => ProcessResult(await _service.GetProductStatisticsAsync(CurrentUserId, StoreId, ProductId));
+        [Route("{storeId}/{productId}")]
+        public async Task<IActionResult> GetStatistics([FromRoute] Ulid storeId, [FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _service.GetProductStatisticsAsync(CurrentUserId, storeId, productId, token));
     }
 }

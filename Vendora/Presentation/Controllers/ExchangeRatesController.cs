@@ -15,6 +15,6 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetExchangeRatesAsync() => ProcessResult(await _service.GetExchangeRatesAsync());
+        public async Task<IActionResult> GetExchangeRatesAsync(CancellationToken token) => ProcessResult(await _service.GetExchangeRatesAsync(token));
     }
 }

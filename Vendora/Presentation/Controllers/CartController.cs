@@ -17,27 +17,27 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMyCartAsync()
-            => ProcessResult(await _cartService.GetMyCartAsync(CurrentUserId));
+        public async Task<IActionResult> GetMyCartAsync(CancellationToken token)
+            => ProcessResult(await _cartService.GetMyCartAsync(CurrentUserId, token));
 
         [HttpPost]
         [Route("products/{productId}")]
-        public async Task<IActionResult> AddProductToCartAsync(Ulid productId)
-            => ProcessResult(await _cartService.AddProductToCartAsync(CurrentUserId, productId));
+        public async Task<IActionResult> AddProductToCartAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _cartService.AddProductToCartAsync(CurrentUserId, productId, token));
 
         [HttpPatch]
-        [Route("products/{cartItemId}/increase")]
-        public async Task<IActionResult> IncreaseQuantityAsync(Ulid cartItemId)
-            => ProcessResult(await _cartService.IncreaseQuantityAsync(CurrentUserId, cartItemId));
+        [Route("{productId}/increase")]
+        public async Task<IActionResult> IncreaseQuantityAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _cartService.IncreaseQuantityAsync(CurrentUserId, productId, token));
 
         [HttpPatch]
-        [Route("products/{cartItemId}/decrease")]
-        public async Task<IActionResult> DecreaseQuantityAsync(Ulid cartItemId)
-            => ProcessResult(await _cartService.DecreaseQuantityAsync(CurrentUserId, cartItemId));
+        [Route("{productId}/decrease")]
+        public async Task<IActionResult> DecreaseQuantityAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _cartService.DecreaseQuantityAsync(CurrentUserId, productId, token));
 
         [HttpDelete]
-        [Route("products/{cartItemId}")]
-        public async Task<IActionResult> RemoveCartItemAsync(Ulid cartItemId)
-           => ProcessResult(await _cartService.RemoveProductFromCartAsync(CurrentUserId, cartItemId)); 
+        [Route("{productId}/remove")]
+        public async Task<IActionResult> RemoveProductFromCartAsync([FromRoute] Ulid productId)
+           => ProcessResult(await _cartService.RemoveProductFromCartAsync(CurrentUserId, productId)); 
     }
 }

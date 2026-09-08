@@ -16,11 +16,11 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMyOrdersAsync()
-            => ProcessResult(await _orderService.GetMyOrdersAsync(CurrentUserId));
+        public async Task<IActionResult> GetMyOrdersAsync(CancellationToken token)
+            => ProcessResult(await _orderService.GetMyOrdersAsync(CurrentUserId, token));
 
         [HttpPost]
-        public async Task<IActionResult> CreatePendingOrderAsync()
-            => ProcessResult(await _orderService.CreatePendingOrderAsync(CurrentUserId));
+        public async Task<IActionResult> CreatePendingOrderAsync(CancellationToken token)
+            => ProcessResult(await _orderService.CreatePendingOrderAsync(CurrentUserId, token));
     }
 }

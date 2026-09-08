@@ -16,52 +16,52 @@ namespace Presentation.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteMyAccountAsync()
-            => ProcessResult(await _userService.DeleteMyAccountAsync(CurrentUserId));
+        public async Task<IActionResult> DeleteMyAccountAsync(CancellationToken token)
+            => ProcessResult(await _userService.DeleteMyAccountAsync(CurrentUserId, token));
 
         [HttpGet]
         [Route("me")]
-        public async Task<IActionResult> GetMeAsync()
-            => ProcessResult(await _userService.GetMeAsync(CurrentUserId));
+        public async Task<IActionResult> GetMeAsync(CancellationToken token)
+            => ProcessResult(await _userService.GetMeAsync(CurrentUserId, token));
 
         [HttpGet]
-        [Route("{UserId}")]
-        public async Task<IActionResult> GetUserAsync(Ulid UserId)
-            => ProcessResult(await _userService.GetUserAsync(UserId));
+        [Route("{userId}")]
+        public async Task<IActionResult> GetUserAsync([FromRoute] Ulid userId, CancellationToken token)
+            => ProcessResult(await _userService.GetUserAsync(userId, token));
 
         [HttpPatch]
         [Route("profile_name")]
-        public async Task<IActionResult> ChangeUserProfileNameAsync(UserChangeProfileNameDTO DTO)
-            => ProcessResult(await _userService.ChangeUserProfileNameAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserProfileNameAsync([FromBody] UserChangeProfileNameDTO DTO, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserProfileNameAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("first_name")]
-        public async Task<IActionResult> ChangeUserFirstNameAsync(UserChangeFirstNameDTO DTO)
-           => ProcessResult(await _userService.ChangeUserFirstNameAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserFirstNameAsync([FromBody] UserChangeFirstNameDTO DTO, CancellationToken token)
+           => ProcessResult(await _userService.ChangeUserFirstNameAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("last_name")]
-        public async Task<IActionResult> ChangeUserLastNameAsync(UserChangeLastNameDTO DTO)
-            => ProcessResult(await _userService.ChangeUserLastNameAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserLastNameAsync([FromBody] UserChangeLastNameDTO DTO, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserLastNameAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("email")]
-        public async Task<IActionResult> ChangeUserEmailAsync(UserChangeEmailDTO DTO)
-            => ProcessResult(await _userService.ChangeUserEmailAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserEmailAsync([FromBody] UserChangeEmailDTO DTO, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserEmailAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("phone")]
-        public async Task<IActionResult> ChangeUserPhoneAsync(UserChangePhoneDTO DTO)
-            => ProcessResult(await _userService.ChangeUserPhoneAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserPhoneAsync([FromBody] UserChangePhoneDTO DTO, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserPhoneAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("gender")]
-        public async Task<IActionResult> ChangeUserGenderAsync(UserChangeGenderDTO DTO)
-            => ProcessResult(await _userService.ChangeUserGenderAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeUserGenderAsync([FromBody] UserChangeGenderDTO DTO, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserGenderAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("profile_picture")]
-        public async Task<IActionResult> ChangeUserProfilePictureAsync(IFormFile file)
-            => ProcessResult(await _userService.ChangeUserProfilePictureAsync(CurrentUserId, file));
+        public async Task<IActionResult> ChangeUserProfilePictureAsync([FromForm] IFormFile? file, CancellationToken token)
+            => ProcessResult(await _userService.ChangeUserProfilePictureAsync(CurrentUserId, file, token));
     }
 }

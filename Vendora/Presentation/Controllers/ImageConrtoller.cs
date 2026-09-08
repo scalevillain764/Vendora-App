@@ -17,12 +17,12 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadPictureAsync(IFormFile file)
+        public async Task<IActionResult> UploadPictureAsync([FromForm] IFormFile file)
             => ProcessResult(await _service.UploadPhotoAsync(file));
 
         [HttpPost]
         [Route("images")]
-        public async Task<IActionResult> UploadPicturesAsync(List<IFormFile> files)
+        public async Task<IActionResult> UploadPicturesAsync([FromForm] List<IFormFile> files)
             => ProcessResult(await _service.UploadPhotosAsync(files));
     }
 }

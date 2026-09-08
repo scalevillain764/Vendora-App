@@ -16,27 +16,27 @@ namespace Presentation.Controllers
 
         [HttpPost]
         [Route("registration")]
-        public async Task<IActionResult> ResgistrateAsync([FromBody] UserRegistrationDTO DTO)
-            => ProcessResult(await _authService.RegistrAsync(DTO));
+        public async Task<IActionResult> ResgistrateAsync([FromBody] UserRegistrationDTO DTO, CancellationToken token)
+            => ProcessResult(await _authService.RegistrAsync(DTO, token));
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> LogInAsync([FromBody] UserLogInDTO DTO)
-            => ProcessResult(await _authService.LogInAsync(DTO));
+        public async Task<IActionResult> LogInAsync([FromBody] UserLogInDTO DTO, CancellationToken token)
+            => ProcessResult(await _authService.LogInAsync(DTO, token));
 
         [HttpGet]
         [Route("refresh")]
-        public async Task<IActionResult> RefreshAsync()
-            => ProcessResult(await _authService.RefreshAsync(CurrentUserId));
+        public async Task<IActionResult> RefreshAsync(CancellationToken token)
+            => ProcessResult(await _authService.RefreshAsync(CurrentUserId, token));
 
         [HttpPatch]
         [Route("password")]
-        public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordDTO DTO)
-            => ProcessResult(await _authService.ChangeUserPasswordAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordDTO DTO, CancellationToken token)
+            => ProcessResult(await _authService.ChangeUserPasswordAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("login")]
-        public async Task<IActionResult> ChangeLoginAsync([FromBody] UserChangeLoginDTO DTO)
-            => ProcessResult(await _authService.ChangeUserLoginAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeLoginAsync([FromBody] UserChangeLoginDTO DTO, CancellationToken token)
+            => ProcessResult(await _authService.ChangeUserLoginAsync(CurrentUserId, DTO, token));
     }
 }

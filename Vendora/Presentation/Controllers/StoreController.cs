@@ -16,35 +16,35 @@ namespace Presentation.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> RemoveMyStoreAsync()
-            => ProcessResult(await _storeService.RemoveMyStoreAsync(CurrentUserId));
+        public async Task<IActionResult> RemoveMyStoreAsync(CancellationToken token)
+            => ProcessResult(await _storeService.RemoveMyStoreAsync(CurrentUserId, token));
 
         [HttpPost]
-        public async Task<IActionResult> CreateStoreAsync([FromBody] StoreOwnerCreateDTO DTO)
-            => ProcessResult(await _storeService.CreateStoreAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> CreateStoreAsync([FromBody] StoreOwnerCreateDTO DTO, CancellationToken token)
+            => ProcessResult(await _storeService.CreateStoreAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("profile_picture")]
-        public async Task<IActionResult> ChangeStoreProfilePictureAsync(IFormFile? file)
-            => ProcessResult(await _storeService.ChangeStoreAvatarAsync(CurrentUserId, file));
+        public async Task<IActionResult> ChangeStoreProfilePictureAsync([FromForm] IFormFile? file, CancellationToken token)
+            => ProcessResult(await _storeService.ChangeStoreAvatarAsync(CurrentUserId, file, token));
 
         [HttpGet]
-        public async Task<IActionResult> GetMyStoreAsync()
-            => ProcessResult(await _storeService.GetMyStoreAsync(CurrentUserId));
+        public async Task<IActionResult> GetMyStoreAsync(CancellationToken token)
+            => ProcessResult(await _storeService.GetMyStoreAsync(CurrentUserId, token));
 
         [HttpGet]
-        [Route("{StoreId}")]
-        public async Task<IActionResult> GetStoreAsync(Ulid StoreId)
-            => ProcessResult(await _storeService.GetStoreAsync(StoreId));
+        [Route("{storeId}")]
+        public async Task<IActionResult> GetStoreAsync([FromRoute] Ulid storeId, CancellationToken token)
+            => ProcessResult(await _storeService.GetStoreAsync(storeId, token));
 
         [HttpPatch]
         [Route("name")]
-        public async Task<IActionResult> ChangeStoreNameAsync(StoreChangeNameDTO DTO)
-            => ProcessResult(await _storeService.ChangeStoreNameAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeStoreNameAsync([FromBody] StoreChangeNameDTO DTO, CancellationToken token)
+            => ProcessResult(await _storeService.ChangeStoreNameAsync(CurrentUserId, DTO, token));
 
         [HttpPatch]
         [Route("description")]
-        public async Task<IActionResult> ChangeStoreDescriptionAsync(StoreChangeDescriptionDTO DTO)
-            => ProcessResult(await _storeService.ChangeStoreDescriptionAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> ChangeStoreDescriptionAsync([FromBody] StoreChangeDescriptionDTO DTO, CancellationToken token)
+            => ProcessResult(await _storeService.ChangeStoreDescriptionAsync(CurrentUserId, DTO, token));
     }
 }

@@ -16,8 +16,8 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SearchAsync([FromBody] SearchRequestDTO DTO)
-            => ProcessResult(await _service.SearchAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> SearchAsync([FromBody] SearchRequestDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.SearchAsync(CurrentUserId, DTO, token));
     }
 }
 

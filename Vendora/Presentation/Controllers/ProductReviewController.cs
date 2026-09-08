@@ -14,28 +14,28 @@ namespace Presentation.Controllers
             => _service = service;
 
         [HttpGet]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> GetProductReviewByProductAsync(Ulid ProductId)
-            => ProcessResult(await _service.GetProductReviewsAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> GetProductReviewByProductAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _service.GetProductReviewsAsync(CurrentUserId, productId, token));
 
         [HttpPost]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> AddProductReviewAsync(Ulid ProductId, [FromBody] ProductReviewCreationAndChangeDTO DTO)
-            => ProcessResult(await _service.AddProductReviewAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}")]
+        public async Task<IActionResult> AddProductReviewAsync([FromRoute] Ulid productId, [FromBody] ProductReviewCreationAndChangeDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.AddProductReviewAsync(CurrentUserId, productId, DTO, token));
 
         [HttpDelete]
-        [Route("{ReviewId}")]
-        public async Task<IActionResult> RemoveProductReviewAsync(Ulid ReviewId)
-            => ProcessResult(await _service.DeleteProductReviewAsync(CurrentUserId, ReviewId));
+        [Route("{reviewId}")]
+        public async Task<IActionResult> RemoveProductReviewAsync([FromRoute] Ulid reviewId, CancellationToken token)
+            => ProcessResult(await _service.DeleteProductReviewAsync(CurrentUserId, reviewId, token));
 
         [HttpPut]
-        [Route("{ReviewId}")]
-        public async Task<IActionResult> EditProductReviewAsync(Ulid ReviewId, ProductReviewCreationAndChangeDTO DTO)
-            => ProcessResult(await _service.EditProductReviewAsync(CurrentUserId, ReviewId, DTO));
+        [Route("{reviewId}")]
+        public async Task<IActionResult> EditProductReviewAsync([FromRoute] Ulid reviewId, [FromBody] ProductReviewCreationAndChangeDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.EditProductReviewAsync(CurrentUserId, reviewId, DTO, token));
 
         [HttpPatch]
-        [Route("{ReviewId}")]
-        public async Task<IActionResult> ReplyToProductReviewAsync(Ulid ReviewId, ProductReviewSellerReplyDTO DTO)
-            => ProcessResult(await _service.ReplyProductReviewAsync(CurrentUserId, ReviewId, DTO));
+        [Route("{reviewId}")]
+        public async Task<IActionResult> ReplyToProductReviewAsync([FromRoute] Ulid reviewId, [FromBody] ProductReviewSellerReplyDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.ReplyProductReviewAsync(CurrentUserId, reviewId, DTO, token));
     }
 }

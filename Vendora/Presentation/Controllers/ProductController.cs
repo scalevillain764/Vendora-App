@@ -17,67 +17,67 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProductAsync(ProductCreationDTO DTO)
-            => ProcessResult(await _productService.CreateProductAsync(CurrentUserId, DTO));
+        public async Task<IActionResult> CreateProductAsync([FromBody] ProductCreationDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.CreateProductAsync(CurrentUserId, DTO, token));
 
         [HttpDelete]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> RemoveProductAsync(Ulid ProductId) 
-            => ProcessResult(await _productService.RemoveProductAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> RemoveProductAsync([FromRoute] Ulid productId, CancellationToken token) 
+            => ProcessResult(await _productService.RemoveProductAsync(CurrentUserId, productId, token));
 
         [HttpPatch]
-        [Route("name/{ProductId}")]
-        public async Task<IActionResult> ChangeProductNameAsync(Ulid ProductId, ProductChangeNameDTO DTO)
-            => ProcessResult(await _productService.ChangeProductNameAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/name")]
+        public async Task<IActionResult> ChangeProductNameAsync([FromRoute] Ulid productId, [FromBody] ProductChangeNameDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.ChangeProductNameAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("category/{ProductId}")]
-        public async Task<IActionResult> ChangeProductCategoryAsync(Ulid ProductId, ProductChangeCategoryDTO DTO)
-            => ProcessResult(await _productService.ChangeProductCategoryAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/category")]
+        public async Task<IActionResult> ChangeProductCategoryAsync([FromRoute] Ulid productId, [FromBody] ProductChangeCategoryDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.ChangeProductCategoryAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("quantity/{ProductId}")]
-        public async Task<IActionResult> ChangeProductQuantityAsync(Ulid ProductId, ProductChangeQuantityDTO DTO)
-            => ProcessResult(await _productService.ChangeProductQuantityAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/quantity")]
+        public async Task<IActionResult> ChangeProductQuantityAsync([FromRoute] Ulid productId, [FromBody] ProductChangeQuantityDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.ChangeProductQuantityAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("description/{ProductId}")]
-        public async Task<IActionResult> ChangeProductDescriptionAsync(Ulid ProductId, ProductChangeDescriptionDTO DTO)
-            => ProcessResult(await _productService.ChangeProductDescriptionAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/description")]
+        public async Task<IActionResult> ChangeProductDescriptionAsync([FromRoute] Ulid productId, [FromRoute] ProductChangeDescriptionDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.ChangeProductDescriptionAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("price/{ProductId}")]
-        public async Task<IActionResult> ChangeProductPriceAsync(Ulid ProductId, ProductChangePriceDTO DTO)
-           => ProcessResult(await _productService.ChangeProductPriceAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/price")]
+        public async Task<IActionResult> ChangeProductPriceAsync([FromRoute] Ulid productId, [FromBody] ProductChangePriceDTO DTO, CancellationToken token)
+           => ProcessResult(await _productService.ChangeProductPriceAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("short_description/{ProductId}")]
-        public async Task<IActionResult> ChangeProductShortDescriptionAsync(Ulid ProductId, ProductChangeShortDescriptionDTO DTO)
-          => ProcessResult(await _productService.ChangeProductShortDescriptionAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/short_description")]
+        public async Task<IActionResult> ChangeProductShortDescriptionAsync([FromRoute] Ulid productId, [FromBody] ProductChangeShortDescriptionDTO DTO, CancellationToken token)
+          => ProcessResult(await _productService.ChangeProductShortDescriptionAsync(CurrentUserId, productId, DTO, token));
 
         [HttpGet]
-        [Route("store/{StoreId}")]
-        public async Task<IActionResult> GetProductsFromStoreAsync(Ulid StoreId)
-            => ProcessResult(await _productService.GetProductsFromStoreAsync(CurrentUserId, StoreId));
+        [Route("store/{storeId}")]
+        public async Task<IActionResult> GetProductsFromStoreAsync([FromRoute] Ulid storeId, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken token)
+            => ProcessResult(await _productService.GetProductsFromStoreAsync(CurrentUserId, new ProductsGetFromStoreDTO(storeId, page, pageSize), token));
 
         [HttpGet]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> GetProductByIdAsync(Ulid ProductId)
-            => ProcessResult(await _productService.GetProductAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> GetProductByIdAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _productService.GetProductAsync(CurrentUserId, productId, token));
 
         [HttpPatch]
-        [Route("preview/{ProductId}")]
-        public async Task<IActionResult> ChangeProductPreviewPictureAsync(Ulid ProductId, IFormFile? file)
-            => ProcessResult(await _productService.ChangeProductPreviewPictureAsync(CurrentUserId, ProductId, file));      
+        [Route("{productId}/preview")]
+        public async Task<IActionResult> ChangeProductPreviewPictureAsync([FromRoute] Ulid productId, [FromForm] IFormFile? file, CancellationToken token)
+            => ProcessResult(await _productService.ChangeProductPreviewPictureAsync(CurrentUserId, productId, file, token));      
 
         [HttpPatch]
-        [Route("images/add/{ProductId}")]
-        public async Task<IActionResult> AddImagesToProductAsync(Ulid ProductId, ProductAddPicturesDTO DTO)
-            => ProcessResult(await _productService.AddPicturesToProductAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/images/add")]
+        public async Task<IActionResult> AddImagesToProductAsync([FromRoute] Ulid productId, [FromBody] ProductAddPicturesDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.AddPicturesToProductAsync(CurrentUserId, productId, DTO, token));
 
         [HttpPatch]
-        [Route("images/remove/{ProductId}")]
-        public async Task<IActionResult> RemoveImageFromProductAsync(Ulid ProductId, ProductRemovePictureDTO DTO)
-            => ProcessResult(await _productService.RemovePictureFromProduct(CurrentUserId, ProductId, DTO));
+        [Route("{productId}/images/remove")]
+        public async Task<IActionResult> RemoveImageFromProductAsync([FromRoute] Ulid productId, ProductRemovePictureDTO DTO, CancellationToken token)
+            => ProcessResult(await _productService.RemovePictureFromProduct(CurrentUserId, productId, DTO, token));
     }
 }

@@ -14,28 +14,28 @@ namespace Presentation.Controllers
             => _service = service;
 
         [HttpGet]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> GetUserQuestionsToProductAsync(Ulid ProductId)
-            => ProcessResult(await _service.GetUserQuestionsToProductAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> GetUserQuestionsToProductAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _service.GetUserQuestionsToProductAsync(CurrentUserId, productId, token));
 
         [HttpPost]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> AskUserQuestionAsync(Ulid ProductId, [FromBody] UserQuestionCreateAndChangeDTO DTO)
-            => ProcessResult(await _service.AskQuestionAsync(CurrentUserId, ProductId, DTO));
+        [Route("{productId}")]
+        public async Task<IActionResult> AskUserQuestionAsync([FromRoute] Ulid productId, [FromBody] UserQuestionCreateAndChangeDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.AskQuestionAsync(CurrentUserId, productId, DTO, token));
 
         [HttpDelete]
-        [Route("{QuestionId}")]
-        public async Task<IActionResult> DeleteUserQuestionAsync(Ulid QuestionId)
-            => ProcessResult(await _service.DeleteQuestionAsync(CurrentUserId, QuestionId));
+        [Route("{questionId}")]
+        public async Task<IActionResult> DeleteUserQuestionAsync([FromRoute] Ulid questionId, CancellationToken token)
+            => ProcessResult(await _service.DeleteQuestionAsync(CurrentUserId, questionId, token));
 
         [HttpPut]
-        [Route("{QuestionId}")]
-        public async Task<IActionResult> EditUserQuestionAsync(Ulid QuestionId, [FromBody] UserQuestionCreateAndChangeDTO DTO)
-            => ProcessResult(await _service.EditQuestionAsync(CurrentUserId, QuestionId, DTO));
+        [Route("{questionId}")]
+        public async Task<IActionResult> EditUserQuestionAsync([FromRoute] Ulid questionId, [FromBody] UserQuestionCreateAndChangeDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.EditQuestionAsync(CurrentUserId, questionId, DTO, token));
 
         [HttpPatch]
-        [Route("{QuestionId}")]
-        public async Task<IActionResult> ReplyToQuestionAsync(Ulid QuestionId, [FromBody] UserQuestionReplyDTO DTO)
-            => ProcessResult(await _service.ReplyUserQuestionAsync(CurrentUserId, QuestionId, DTO));
+        [Route("{questionId}")]
+        public async Task<IActionResult> ReplyToQuestionAsync([FromRoute] Ulid questionId, [FromBody] UserQuestionReplyDTO DTO, CancellationToken token)
+            => ProcessResult(await _service.ReplyUserQuestionAsync(CurrentUserId, questionId, DTO, token));
     }
 }

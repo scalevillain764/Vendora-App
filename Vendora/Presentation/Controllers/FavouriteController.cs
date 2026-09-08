@@ -17,18 +17,18 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUserFavouritesAsync()
-            => ProcessResult(await _service.GetFavouritesByIdAsync(CurrentUserId));
+        public async Task<IActionResult> GetUserFavouritesAsync(CancellationToken token)
+            => ProcessResult(await _service.GetFavouritesByIdAsync(CurrentUserId, token));
 
         [HttpPost]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> AddFavouriteAsync(Ulid ProductId) 
-            => ProcessResult(await _service.AddToFavouriteAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> AddFavouriteAsync([FromRoute] Ulid productId, CancellationToken token) 
+            => ProcessResult(await _service.AddToFavouriteAsync(CurrentUserId, productId, token));
 
 
         [HttpDelete]
-        [Route("{ProductId}")]
-        public async Task<IActionResult> RemoveFromFavouriteAsync(Ulid ProductId)
-            => ProcessResult(await _service.RemoveFromFavouriteAsync(CurrentUserId, ProductId));
+        [Route("{productId}")]
+        public async Task<IActionResult> RemoveFromFavouriteAsync([FromRoute] Ulid productId, CancellationToken token)
+            => ProcessResult(await _service.RemoveFromFavouriteAsync(CurrentUserId, productId, token));
     }
 }
