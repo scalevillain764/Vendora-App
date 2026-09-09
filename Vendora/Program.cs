@@ -10,10 +10,7 @@ using dotenv.net;
 using FluentValidation;
 using FluentValidation.Validators;
 using Infrastructure.AppDbContexts;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 // microsoft
 using Microsoft.OpenApi;
 using Presentation.ExceptionMiddlewares;
@@ -22,6 +19,11 @@ using SharpGrip.FluentValidation.AutoValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.DependencyInjection; 
 
 namespace Vendora
 {
@@ -31,6 +33,12 @@ namespace Vendora
         {
             DotEnv.Load();
             var builder = WebApplication.CreateBuilder(args);
+
+            // reddis
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+            });
 
             // serilog
             builder.Host.UseSerilog((context, configuration) =>
@@ -131,27 +139,8 @@ namespace Vendora
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddHttpClient();
             builder.Services.AddControllers();
-
             builder.Services.AddEndpointsApiExplorer();
-            /* builder.Services.AddSwaggerGen();*/
-            builder.Services.AddSwaggerGen(options =>
-            {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header
-                });
-
-                options.AddSecurityRequirement(document =>
-                    new OpenApiSecurityRequirement
-                    {
-                        [new OpenApiSecuritySchemeReference("Bearer", document)] =
-                            new List<string>()
-                    });
-            });
+            
 
             var app = builder.Build();
 
@@ -161,11 +150,6 @@ namespace Vendora
                 app.UseExceptionHandler("/Error");   
                 app.UseHsts();
             }
-
-            app.UseSwagger();
-            app.UseSwaggerUI(c => {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            }); 
 
             app.UseHttpsRedirection();
             app.UseRouting();
@@ -177,22 +161,6 @@ namespace Vendora
             // middleware
 
             app.MapControllers();
-
-           /* using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<AppDbContext>(); // ”кажите им€ вашего DbContext
-                    context.Database.Migrate();
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "ќшибка при применении миграций в базу данных.");
-                }
-            }*/
-
             app.Run();
         }
     }
