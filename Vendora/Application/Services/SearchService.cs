@@ -18,6 +18,9 @@ namespace Application.Services
 
         public async Task<Result<PagedResponse<ProductCardDTO>>> SearchAsync(Ulid UserId, SearchRequestDTO DTO, CancellationToken token)
         {
+            if (DTO.Page < 1 || DTO.PageSize < 1)
+                return Result<PagedResponse<ProductCardDTO>>.Error("Ошибка страницы", Domain.ErrorTypes.ErrorType.Validation);
+
             var products = _context.Products
                 .Include(x => x.ProductReviews)
                 .AsQueryable();

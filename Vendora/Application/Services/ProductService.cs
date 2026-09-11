@@ -98,6 +98,9 @@ namespace Application.Services
 
         public async Task<Result<PagedResponse<ProductResponseDTO>>> GetProductsFromStoreAsync(Ulid UserId, ProductsGetFromStoreDTO DTO, CancellationToken token)
         {
+            if (DTO.page < 1 || DTO.pageSize < 1)
+                return Result<PagedResponse<ProductResponseDTO>>.Error("Ошибка страницы", ErrorType.Validation);
+
             var query = _context.Products
                 .Where(x => x.StoreId == DTO.StoreId);
 
